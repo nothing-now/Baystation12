@@ -51,6 +51,23 @@ GLOBAL_LIST_INIT(keyboard_sound,list('sound/machines/keyboard/keypress1.ogg','so
 GLOBAL_LIST_INIT(keystroke_sound,list('sound/machines/keyboard/keystroke1.ogg','sound/machines/keyboard/keystroke2.ogg','sound/machines/keyboard/keystroke3.ogg','sound/machines/keyboard/keystroke4.ogg'))
 GLOBAL_LIST_INIT(switch_sound,list('sound/machines/switch1.ogg','sound/machines/switch2.ogg','sound/machines/switch3.ogg','sound/machines/switch4.ogg'))
 GLOBAL_LIST_INIT(button_sound,list('sound/machines/button1.ogg','sound/machines/button2.ogg','sound/machines/button3.ogg','sound/machines/button4.ogg'))
+var/list/trauma_sound = list('sound/effects/gore/trauma1.ogg', 'sound/effects/gore/trauma2.ogg', 'sound/effects/gore/trauma3.ogg')
+var/list/casing_sound = list ('sound/weapons/guns/misc/casingfall1.ogg','sound/weapons/guns/misc/casingfall2.ogg','sound/weapons/guns/misc/casingfall3.ogg')
+var/list/terminal_type = list('sound/machines/keypress1.ogg', 'sound/machines/keypress2.ogg', 'sound/machines/keypress3.ogg', 'sound/machines/keypress4.ogg')
+
+
+var/list/keyboard_sound = list('sound/machines/terminal_button01.ogg', 'sound/machines/terminal_button02.ogg', 'sound/machines/terminal_button03.ogg',
+							  'sound/machines/terminal_button04.ogg', 'sound/machines/terminal_button05.ogg', 'sound/machines/terminal_button06.ogg',
+							  'sound/machines/terminal_button07.ogg', 'sound/machines/terminal_button08.ogg')
+var/list/gun_sound = list('sound/weapons/gunshot.ogg', 'sound/weapons/gunshot2.ogg', 'sound/weapons/gunshot3.ogg', 'sound/weapons/gunshot4.ogg')
+var/list/brifle = list('sound/weapons/newrifle.ogg', 'sound/weapons/newrifle2.ogg', 'sound/weapons/newrifle3.ogg')
+var/list/bullet_hit_wall = list('sound/weapons/guns/misc/ric1.ogg', 'sound/weapons/guns/misc/ric2.ogg', 'sound/weapons/guns/misc/ric3.ogg', 'sound/weapons/guns/misc/ric4.ogg', 'sound/weapons/guns/misc/ric5.ogg')
+var/list/stab_sound = list('sound/weapons/stab1.ogg', 'sound/weapons/stab2.ogg', 'sound/weapons/stab3.ogg')
+var/list/slash_sound = list('sound/weapons/slash1.ogg','sound/weapons/slash2.ogg','sound/weapons/slash3.ogg')
+var/list/blunt_swing = list('sound/weapons/blunt_swing1.ogg','sound/weapons/blunt_swing2.ogg','sound/weapons/blunt_swing3.ogg')
+
+
+
 
 /proc/playsound(var/atom/source, soundin, vol as num, vary, extrarange as num, falloff, var/is_global, var/frequency, var/is_ambiance = 0)
 
@@ -72,6 +89,10 @@ GLOBAL_LIST_INIT(button_sound,list('sound/machines/button1.ogg','sound/machines/
 			var/turf/T = get_turf(M)
 			if(T && T.z == turf_source.z && (!is_ambiance || M.get_preference_value(/datum/client_preference/play_ambiance) == GLOB.PREF_YES))
 				M.playsound_local(turf_source, soundin, vol, vary, frequency, falloff, is_global, extrarange)
+			var/z_dist = abs(T.z - turf_source.z)//Playing sound on a z-level above or below you.
+			if(T && z_dist <= 1 && (!is_ambiance || M.get_preference_value(/datum/client_preference/play_ambiance) == GLOB.PREF_YES))
+				M.playsound_local(turf_source, soundin, vol/(1+z_dist), vary, frequency, falloff, is_global, extrarange)
+
 
 var/const/FALLOFF_SOUNDS = 0.5
 
@@ -183,4 +204,14 @@ var/const/FALLOFF_SOUNDS = 0.5
 			if ("keystroke") soundin = pick(GLOB.keystroke_sound)
 			if ("switch") soundin = pick(GLOB.switch_sound)
 			if ("button") soundin = pick(GLOB.button_sound)
+			if ("trauma") soundin = pick(trauma_sound)
+			if ("stab_sound") soundin = pick(stab_sound)
+			if ("casing_sound") soundin = pick(casing_sound)
+			if ("keyboard") soundin = pick(keyboard_sound)
+			if ("gunshot") soundin = pick(gun_sound)
+			if ("brifle") soundin = pick(brifle)
+			if ("hitwall") soundin = pick(bullet_hit_wall)
+			if ("slash_sound") soundin = pick(slash_sound)
+			if ("swing_sound") soundin = pick(swing_sound)
+			if ("blunt_swing") soundin = pick(blunt_swing)
 	return soundin
