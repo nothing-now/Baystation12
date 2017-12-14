@@ -1,8 +1,7 @@
-/mob/living/carbon/human
-	hud_type = /datum/hud/human
+/mob/living/carbon/human/instantiate_hud(var/datum/hud/HUD, var/ui_style, var/ui_color, var/ui_alpha)
+	HUD.human_hud(ui_style, ui_color, ui_alpha, src)
 
-/datum/hud/human/FinalizeInstantiation(var/ui_style='icons/mob/screen1_White.dmi', var/ui_color = "#ffffff", var/ui_alpha = 255)
-	var/mob/living/carbon/human/target = mymob
+/datum/hud/proc/human_hud(var/ui_style='icons/mob/screen1_White.dmi', var/ui_color = "#ffffff", var/ui_alpha = 255, var/mob/living/carbon/human/target)
 	var/datum/hud_data/hud_data
 	if(!istype(target))
 		hud_data = new()
@@ -10,15 +9,39 @@
 		hud_data = target.species.hud
 
 	if(hud_data.icon)
-		ui_style = hud_data.icon
+		ui_style = 'icons/mob/screen/dark.dmi'//hud_data.icon
+	else
+		ui_style = 'icons/mob/screen/dark.dmi'
 
 	src.adding = list()
 	src.other = list()
 	src.hotkeybuttons = list() //These can be disabled for hotkey usersx
+	mymob.using_alt_hud = 1
 
 	var/list/hud_elements = list()
 	var/obj/screen/using
 	var/obj/screen/inventory/inv_box
+
+	using = new /obj/screen() //Right hud bar
+	using.dir = SOUTH
+	using.icon = ui_style
+	using.screen_loc = "EAST+1,SOUTH to EAST+1,NORTH"
+	using.layer = UNDER_HUD_LAYER
+	adding += using
+
+	using = new /obj/screen() //Lower hud bar
+	using.dir = EAST
+	using.icon = ui_style
+	using.screen_loc = "WEST,SOUTH-1 to EAST,SOUTH-1"
+	using.layer = UNDER_HUD_LAYER
+	adding += using
+
+	using = new /obj/screen() //Corner Button
+	using.dir = NORTHWEST
+	using.icon = ui_style
+	using.screen_loc = "EAST+1,SOUTH-1"
+	using.layer = UNDER_HUD_LAYER
+	adding += using
 
 	// Draw the various inventory equipment slots.
 	var/has_hidden_gear
@@ -39,8 +62,9 @@
 			inv_box.set_dir(slot_data["dir"])
 
 		if(slot_data["toggle"])
-			src.other += inv_box
-			has_hidden_gear = 1
+			//src.other += inv_box
+			has_hidden_gear = 0
+			src.adding += inv_box
 		else
 			src.adding += inv_box
 
@@ -58,6 +82,7 @@
 	if(hud_data.has_a_intent)
 
 		using = new /obj/screen/intent()
+		using.icon = ui_style
 		src.adding += using
 		action_intent = using
 
@@ -79,21 +104,22 @@
 		using.name = "drop"
 		using.icon = ui_style
 		using.icon_state = "act_drop"
-		using.screen_loc = ui_drop_throw
+		using.screen_loc = ui_dropbutton
 		using.color = ui_color
 		using.alpha = ui_alpha
 		src.hotkeybuttons += using
 
 	if(hud_data.has_hands)
-
+		/*
 		using = new /obj/screen()
 		using.name = "equip"
 		using.icon = ui_style
 		using.icon_state = "act_equip"
-		using.screen_loc = ui_equip
+		using.screen_loc = ui_tg_equip
 		using.color = ui_color
 		using.alpha = ui_alpha
 		src.adding += using
+		*/
 
 		inv_box = new /obj/screen/inventory()
 		inv_box.name = "r_hand"
@@ -121,11 +147,11 @@
 		inv_box.alpha = ui_alpha
 		src.l_hand_hud_object = inv_box
 		src.adding += inv_box
-
+	/*
 		using = new /obj/screen/inventory()
 		using.name = "hand"
 		using.icon = ui_style
-		using.icon_state = "hand1"
+		using.icon_state = "hand"
 		using.screen_loc = ui_swaphand1
 		using.color = ui_color
 		using.alpha = ui_alpha
@@ -139,13 +165,23 @@
 		using.color = ui_color
 		using.alpha = ui_alpha
 		src.adding += using
+		*/
+
+		using = new /obj/screen/inventory()
+		using.name = "hand"
+		using.dir = NORTH
+		using.icon = ui_style
+		using.icon_state = "hand"
+		using.screen_loc = ui_swaphand1
+		src.swaphands_hud_object = using
+		src.adding += using
 
 	if(hud_data.has_resist)
 		using = new /obj/screen()
 		using.name = "resist"
 		using.icon = ui_style
 		using.icon_state = "act_resist"
-		using.screen_loc = ui_pull_resist
+		using.screen_loc = ui_resist
 		using.color = ui_color
 		using.alpha = ui_alpha
 		src.hotkeybuttons += using
@@ -155,7 +191,7 @@
 		mymob.throw_icon.icon = ui_style
 		mymob.throw_icon.icon_state = "act_throw_off"
 		mymob.throw_icon.name = "throw"
-		mymob.throw_icon.screen_loc = ui_drop_throw
+		mymob.throw_icon.screen_loc = ui_dropbutton
 		mymob.throw_icon.color = ui_color
 		mymob.throw_icon.alpha = ui_alpha
 		src.hotkeybuttons += mymob.throw_icon
@@ -165,7 +201,7 @@
 		mymob.pullin.icon = ui_style
 		mymob.pullin.icon_state = "pull0"
 		mymob.pullin.name = "pull"
-		mymob.pullin.screen_loc = ui_pull_resist
+		mymob.pullin.screen_loc = ui_pull
 		src.hotkeybuttons += mymob.pullin
 		hud_elements |= mymob.pullin
 
@@ -245,18 +281,32 @@
 	mymob.stamina_icon.screen_loc = ui_stamina
 	hud_elements |= mymob.stamina_icon
 
+
+	mymob.rest = new /obj/screen()
+	mymob.rest.name = "rest"
+	mymob.rest.icon = ui_style
+	mymob.rest.icon_state = "rest[mymob.resting]"
+	mymob.rest.screen_loc = ui_resist//ui_rest
+	hud_elements |= mymob.rest
+	if (mymob.resting)
+		mymob.rest.icon_state = "rest1"
+	else
+		mymob.rest.icon_state = "rest0"
+
+
+
 	mymob.kick_icon = new /obj/screen()
 	mymob.kick_icon.icon = ui_style
 	mymob.kick_icon.icon_state = "kick"
 	mymob.kick_icon.name = "kick"
-	mymob.kick_icon.screen_loc = ui_kick_jump
+	mymob.kick_icon.screen_loc = ui_atk
 	hud_elements |= mymob.kick_icon
 
 	mymob.jump_icon = new /obj/screen()
 	mymob.jump_icon.icon = ui_style
 	mymob.jump_icon.icon_state = "jump"
 	mymob.jump_icon.name = "jump"
-	mymob.jump_icon.screen_loc = ui_kick_jump
+	mymob.jump_icon.screen_loc = ui_atk
 	hud_elements |= mymob.jump_icon
 
 	mymob.fixeye = new /obj/screen()
@@ -277,13 +327,55 @@
 
 	mymob.noise = new /obj/screen()
 	mymob.noise.icon = 'icons/mob/noise.dmi'
-	mymob.noise.icon_state = pick("1", "2", "3")
+	mymob.noise.icon_state = "[rand(1,9)]"
 	mymob.noise.name = " "
 	mymob.noise.screen_loc = "1,1 to 15,15"
 	mymob.noise.mouse_opacity = 0
-	hud_elements |= mymob.noise 
+	hud_elements |= mymob.noise
+
+	mymob.combat_icon = new /obj/screen()//combat mode
+	mymob.combat_icon.name = "combat mode"
+	mymob.combat_icon.icon = ui_style//'icons/mob/screen/dark.dmi'
+	mymob.combat_icon.icon_state = "combat0"
+	mymob.combat_icon.screen_loc = ui_combat
+	hud_elements |= mymob.combat_icon
+
+	mymob.combat_intent_icon = new /obj/screen()//combat mode
+	mymob.combat_intent_icon.name = "combat intent"
+	mymob.combat_intent_icon.icon = ui_style//'icons/mob/screen/dark.dmi'
+	mymob.combat_intent_icon.icon_state = "dodge"
+	mymob.combat_intent_icon.screen_loc = ui_combat_intent
+	hud_elements |= mymob.combat_intent_icon
+
+	mymob.surrender = new /obj/screen()
+	mymob.surrender.name = "surrender"
+	mymob.surrender.icon = ui_style//'icons/mob/screen/dark.dmi'
+	mymob.surrender.icon_state = "surrender"
+	mymob.surrender.screen_loc = ui_surrender
+	hud_elements |= mymob.surrender
+
+	mymob.wield_icon = new /obj/screen()
+	mymob.wield_icon.name = "wield"
+	mymob.wield_icon.icon = ui_style
+	mymob.wield_icon.icon_state = "wield"
+	mymob.wield_icon.screen_loc = ui_atk
+	hud_elements |= mymob.wield_icon
+
+	mymob.happiness_icon = new /obj/screen()
+	mymob.happiness_icon.name = "mood"
+	mymob.happiness_icon.icon = ui_style
+	mymob.happiness_icon.icon_state = "mood4"
+	mymob.happiness_icon.screen_loc = ui_happiness
+	hud_elements |= mymob.happiness_icon
 
 
+	mymob.zone_sel = new /obj/screen/zone_sel( null )
+	mymob.zone_sel.icon = 'icons/mob/puppet_new.dmi'//'icons/mob/puppet.dmi'
+	mymob.zone_sel.overlays.Cut()
+	mymob.zone_sel.overlays += image('icons/mob/zone_sel_newer.dmi', "[mymob.zone_sel.selecting]")
+	hud_elements |= mymob.zone_sel
+
+	/*
 	mymob.zone_sel = new /obj/screen/zone_sel( null )
 	mymob.zone_sel.icon = ui_style
 	mymob.zone_sel.color = ui_color
@@ -291,13 +383,14 @@
 	mymob.zone_sel.overlays.Cut()
 	mymob.zone_sel.overlays += image('icons/mob/zone_sel.dmi', "[mymob.zone_sel.selecting]")
 	hud_elements |= mymob.zone_sel
+	*/
 
 	//Handle the gun settings buttons
 	mymob.gun_setting_icon = new /obj/screen/gun/mode(null)
 	mymob.gun_setting_icon.icon = ui_style
 	mymob.gun_setting_icon.color = ui_color
 	mymob.gun_setting_icon.alpha = ui_alpha
-	hud_elements |= mymob.gun_setting_icon
+	//hud_elements |= mymob.gun_setting_icon
 
 	mymob.item_use_icon = new /obj/screen/gun/item(null)
 	mymob.item_use_icon.icon = ui_style
@@ -314,20 +407,22 @@
 	mymob.radio_use_icon.color = ui_color
 	mymob.radio_use_icon.alpha = ui_alpha
 
-	mymob.fov = new /obj/screen()
-	mymob.fov.icon = 'icons/mob/hide.dmi'
-	mymob.fov.icon_state = "combat"
-	mymob.fov.name = " "
-	mymob.fov.screen_loc = "1,1"
-	mymob.fov.mouse_opacity = 0
-	mymob.fov.layer = UNDER_HUD_LAYER
-	hud_elements |= mymob.fov
+	if(ishuman(mymob))
+		var/mob/living/carbon/human/H = mymob
+		H.fov = new /obj/screen()
+		H.fov.icon = 'icons/mob/hide.dmi'
+		H.fov.icon_state = "combat"
+		H.fov.name = " "
+		H.fov.screen_loc = "1,1"
+		H.fov.mouse_opacity = 0
+		H.fov.layer = UNDER_HUD_LAYER
+		hud_elements |= H.fov
 
 	mymob.client.screen = list()
 
 	mymob.client.screen += hud_elements
 	mymob.client.screen += src.adding + src.hotkeybuttons
-	inventory_shown = 0
+	inventory_shown = 1
 
 /mob/living/carbon/human/verb/toggle_hotkey_verbs()
 	set category = "OOC"
@@ -340,3 +435,11 @@
 	else
 		client.screen -= hud_used.hotkeybuttons
 		hud_used.hotkey_ui_hidden = 1
+
+//Used for new human mobs created by cloning/goleming/etc.
+/mob/living/carbon/human/proc/set_cloned_appearance()
+	f_style = "Shaved"
+	if(dna.species == SPECIES_HUMAN) //no more xenos losing ears/tentacles
+		h_style = pick("Bedhead", "Bedhead 2", "Bedhead 3")
+	all_underwear.Cut()
+	regenerate_icons()

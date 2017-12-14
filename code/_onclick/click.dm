@@ -51,8 +51,8 @@
 	if(modifiers["ctrl"] && modifiers["alt"])
 		CtrlAltClickOn(A)
 		return 1
-	if(modifiers["middle"])
-		MiddleClickOn(A)
+	if(modifiers["middle"] && modifiers["shift"])
+		ShiftMiddleClickOn(A)
 		return 1
 	if(modifiers["shift"])
 		ShiftClickOn(A)
@@ -64,12 +64,20 @@
 		CtrlClickOn(A)
 		return 1
 
-	if(stat || paralysis || stunned || weakened)
+	if(!canClick()) // in the year 2000...
+		return
+
+	if(lying && istype(A, /turf/) && !istype(A, /turf/space/))
+		if(!get_active_hand())//Should make getting up stairs easier.
+			scramble(A)
+
+	if(stat || paralysis || stunned) //|| weakened)
 		return
 
 	face_atom(A) // change direction to face what you clicked on
 
-	if(!canClick()) // in the year 2000...
+	if(modifiers["middle"])//This goes below everything else because of how middle click is used.
+		MiddleClickOn(A)
 		return
 
 	if(istype(loc, /obj/mecha))
@@ -211,14 +219,21 @@
 	Only used for swapping hands
 */
 /mob/proc/MiddleClickOn(var/atom/A)
-	swap_hand()
+	A.MiddleClick(src)
 	return
 
-// In case of use break glass
-/*
-/atom/proc/MiddleClick(var/mob/M as mob)
+/atom/proc/MiddleClick(var/mob/M)
+	middle_click_intent_check(M)
 	return
-*/
+// In case of use break glass
+
+
+/mob/proc/ShiftMiddleClickOn(var/atom/A)
+	A.ShiftMiddleClick(src)
+	return
+
+/atom/proc/ShiftMiddleClick(var/mob/user)
+	user.pointed(src)
 
 /*
 	Shift click
@@ -245,6 +260,15 @@
 
 /atom/movable/CtrlClick(var/mob/user)
 	if(Adjacent(user))
+		if (ishuman(user))
+			var/mob/living/carbon/human/H = user
+			var/obj/item/organ/external/temp = H.organs_by_name[BP_R_HAND]
+			var/hashands = (temp && temp.is_usable())
+			if (!hashands)
+				temp = H.organs_by_name[BP_L_HAND]
+				hashands = (temp && temp.is_usable())
+			if (!hashands)
+				return
 		user.start_pulling(src)
 
 /*
@@ -334,6 +358,8 @@
 		if(dx > 0)	direction = EAST
 		else		direction = WEST
 	if(direction != dir)
+		if(facing_dir)
+			facing_dir = direction
 		facedir(direction)
 
 /obj/screen/click_catcher
@@ -457,3 +483,42 @@ var/const/CLICK_HANDLER_ALL                  = (~0)
 	click_handler = new new_click_handler_type(src)
 	click_handler.Enter()
 	click_handlers.Push(click_handler)
+
+/mob/proc/scramble(var/atom/A)
+	var/direction
+	if(stat || buckled || paralysis || stunned || sleeping || (status_flags & FAKEDEATH) || restrained() || pulledby) //|| (weakened > 5)) //You should be able to crawl when injured.
+		return
+	if(!istype(src.loc, /turf/))
+		return
+	if(!A || !x || !y || !A.x || !A.y) return
+	if(scrambling)
+		return
+	if(!has_limbs)
+		src << "\red You can't even move yourself - you have no limbs!"
+	var/dx = A.x - x
+	var/dy = A.y - y
+	if(!dx && !dy) return
+
+	if(abs(dx) < abs(dy))
+		if(dy > 0)	direction = NORTH
+		else		direction = SOUTH
+	else
+		if(dx > 0)	direction = EAST
+		else		direction = WEST
+	if(direction)
+		scrambling = 1
+		if(do_after(src, 10))//spawn(10)
+			Move(get_step(src,direction))
+			scrambling = 0
+			dir = 2
+			src.visible_message("\red <b>[src]</b> crawls!")
+		else
+			scrambling = 0
+
+/atom/proc/middle_click_intent_check(var/mob/M)
+	if(M.middle_click_intent == "kick")
+		return kick_act(M)
+	else if(M.middle_click_intent == "jump")
+		jump_act(src, M)
+	else
+		M.swap_hand()

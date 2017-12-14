@@ -1,20 +1,40 @@
 /*
+	The global hud:
+	Uses the same visual objects for all players.
+*/
+var/datum/global_hud/global_hud = new()
+var/list/global_huds = list(
+		global_hud.nvg,
+		global_hud.thermal,
+		global_hud.meson,
+		global_hud.science)
+
+/datum/global_hud
+	var/obj/screen/nvg
+	var/obj/screen/thermal
+	var/obj/screen/meson
+	var/obj/screen/science
+
+/datum/global_hud/proc/setup_overlay(var/icon_state)
+	var/obj/screen/screen = new /obj/screen()
+	screen.screen_loc = "1,1"
+	screen.icon = 'icons/obj/hud_full.dmi'
+	screen.icon_state = icon_state
+	screen.mouse_opacity = 0
+
+	return screen
+
+/datum/global_hud/New()
+	nvg = setup_overlay("nvg_hud")
+	thermal = setup_overlay("thermal_hud")
+	meson = setup_overlay("meson_hud")
+	science = setup_overlay("science_hud")
+
+/*
 	The hud datum
 	Used to show and hide huds for all the different mob types,
 	including inventories and item quick actions.
 */
-
-/mob
-	var/hud_type = null
-	var/datum/hud/hud_used = null
-
-/mob/proc/InitializeHud()
-	if(hud_used)
-		qdel(hud_used)
-	if(hud_type)
-		hud_used = new hud_type(src)
-	else
-		hud_used = new /datum/hud
 
 /datum/hud
 	var/mob/mymob
@@ -27,6 +47,7 @@
 	var/obj/screen/lingchemdisplay
 	var/obj/screen/r_hand_hud_object
 	var/obj/screen/l_hand_hud_object
+	var/obj/screen/swaphands_hud_object
 	var/obj/screen/action_intent
 	var/obj/screen/move_intent
 
@@ -37,7 +58,7 @@
 	var/obj/screen/movable/action_button/hide_toggle/hide_actions_toggle
 	var/action_buttons_hidden = 0
 
-/datum/hud/New(mob/owner)
+datum/hud/New(mob/owner)
 	mymob = owner
 	instantiate()
 	..()
@@ -63,8 +84,6 @@
 			var/list/hud_data = H.species.hud.gear[gear_slot]
 			if(inventory_shown && hud_shown)
 				switch(hud_data["slot"])
-					if(slot_head)
-						if(H.head)      H.head.screen_loc =      hud_data["loc"]
 					if(slot_shoes)
 						if(H.shoes)     H.shoes.screen_loc =     hud_data["loc"]
 					if(slot_l_ear)
@@ -74,17 +93,9 @@
 					if(slot_gloves)
 						if(H.gloves)    H.gloves.screen_loc =    hud_data["loc"]
 					if(slot_glasses)
-						if(H.glasses)   H.glasses.screen_loc =   hud_data["loc"]
-					if(slot_w_uniform)
-						if(H.w_uniform) H.w_uniform.screen_loc = hud_data["loc"]
-					if(slot_wear_suit)
-						if(H.wear_suit) H.wear_suit.screen_loc = hud_data["loc"]
-					if(slot_wear_mask)
-						if(H.wear_mask) H.wear_mask.screen_loc = hud_data["loc"]
+						if(H.glasses)	H.glasses.screen_loc =   hud_data["loc"]
 			else
 				switch(hud_data["slot"])
-					if(slot_head)
-						if(H.head)      H.head.screen_loc =      null
 					if(slot_shoes)
 						if(H.shoes)     H.shoes.screen_loc =     null
 					if(slot_l_ear)
@@ -95,12 +106,7 @@
 						if(H.gloves)    H.gloves.screen_loc =    null
 					if(slot_glasses)
 						if(H.glasses)   H.glasses.screen_loc =   null
-					if(slot_w_uniform)
-						if(H.w_uniform) H.w_uniform.screen_loc = null
-					if(slot_wear_suit)
-						if(H.wear_suit) H.wear_suit.screen_loc = null
-					if(slot_wear_mask)
-						if(H.wear_mask) H.wear_mask.screen_loc = null
+
 
 
 /datum/hud/proc/persistant_inventory_update()
@@ -125,6 +131,14 @@
 						if(H.l_store) H.l_store.screen_loc = hud_data["loc"]
 					if(slot_r_store)
 						if(H.r_store) H.r_store.screen_loc = hud_data["loc"]
+					if(slot_head)
+						if(H.head)    H.head.screen_loc =      hud_data["loc"]
+					if(slot_w_uniform)
+						if(H.w_uniform) H.w_uniform.screen_loc = hud_data["loc"]
+					if(slot_wear_suit)
+						if(H.wear_suit) H.wear_suit.screen_loc = hud_data["loc"]
+					if(slot_wear_mask)
+						if(H.wear_mask) H.wear_mask.screen_loc = hud_data["loc"]
 			else
 				switch(hud_data["slot"])
 					if(slot_s_store)
@@ -139,6 +153,14 @@
 						if(H.l_store) H.l_store.screen_loc = null
 					if(slot_r_store)
 						if(H.r_store) H.r_store.screen_loc = null
+					if(slot_head)
+						if(H.head)    H.head.screen_loc =      null
+					if(slot_w_uniform)
+						if(H.w_uniform) H.w_uniform.screen_loc = null
+					if(slot_wear_suit)
+						if(H.wear_suit) H.wear_suit.screen_loc = null
+					if(slot_wear_mask)
+						if(H.wear_mask) H.wear_mask.screen_loc = null
 
 
 /datum/hud/proc/instantiate()
@@ -148,9 +170,9 @@
 	var/ui_color = mymob.client.prefs.UI_style_color
 	var/ui_alpha = mymob.client.prefs.UI_style_alpha
 
-	FinalizeInstantiation(ui_style, ui_color, ui_alpha)
+	mymob.instantiate_hud(src, ui_style, ui_color, ui_alpha)
 
-/datum/hud/proc/FinalizeInstantiation(var/ui_style, var/ui_color, var/ui_alpha)
+/mob/proc/instantiate_hud(var/datum/hud/HUD, var/ui_style, var/ui_color, var/ui_alpha)
 	return
 
 //Triggered when F12 is pressed (Unless someone changed something in the DMF)
