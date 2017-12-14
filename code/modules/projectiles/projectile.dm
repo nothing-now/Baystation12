@@ -7,6 +7,8 @@
 	anchored = 1 //There's a reason this is here, Mport. God fucking damn it -Agouri. Find&Fix by Pete. The reason this is here is to stop the curving of emitter shots.
 	pass_flags = PASSTABLE
 	mouse_opacity = 0
+	var/list/mob_hit_sound = list('sound/effects/gore/bullethit2.ogg', 'sound/effects/gore/bullethit2.ogg') //Sound it makes when it hits a mob. It's a list so you can put multiple hit sounds there.
+	var/wall_hitsound = "hitwall"
 	var/bumped = 0		//Prevents it from hitting more than one guy at once
 	var/def_zone = ""	//Aiming at
 	var/mob/firer = null//Who shot it
@@ -44,7 +46,7 @@
 	var/agony = 0
 	var/embed = 0 // whether or not the projectile can embed itself in the mob
 	var/penetration_modifier = 0.2 //How much internal damage this projectile can deal, as a multiplier.
-
+	
 	var/hitscan = 0		// whether the projectile should be hitscan
 	var/step_delay = 1	// the delay between iterations if not a hitscan projectile
 
@@ -68,11 +70,28 @@
 
 //TODO: make it so this is called more reliably, instead of sometimes by bullet_act() and sometimes not
 /obj/item/projectile/proc/on_hit(var/atom/target, var/blocked = 0, var/def_zone = null)
+	var/turf/target_loca = get_turf(target)
 	if(blocked >= 100)		return 0//Full block
 	if(!isliving(target))	return 0
 	if(isanimal(target))	return 0
 
 	var/mob/living/L = target
+	if(damage && damage_type == BRUTE)//&& L.blood_volume
+		var/splatter_dir = dir
+		if(starting)
+			splatter_dir = get_dir(starting, target_loca)
+			target_loca = get_step(target_loca, splatter_dir)
+		if(isalien(L))
+			new /obj/effect/overlay/temp/dir_setting/bloodsplatter/xenosplatter(target_loca, splatter_dir)
+		else
+			var/blood_color = "#C80000"
+			if(ishuman(target))
+				var/mob/living/carbon/human/H = target
+				blood_color = H.species.blood_color
+			new /obj/effect/overlay/temp/dir_setting/bloodsplatter(target_loca, splatter_dir, blood_color)
+		if(prob(50))
+			target_loca.add_blood(L)
+
 
 	L.apply_effects(stun, weaken, paralyze, 0, stutter, eyeblur, drowsy, agony, blocked)
 	//radiation protection is handled separately from other armour types.
@@ -171,7 +190,10 @@
 		return
 
 	//roll to-hit
-	miss_modifier = max(15*(distance-2) - round(15*accuracy) + miss_modifier, 0)
+	//miss_modifier = max(15*(distance-2) - round(15*accuracy) + miss_modifier, 0)
+	miss_modifier = 15*(distance-2) - round(15*accuracy) + miss_modifier
+	if(target_mob == src.original)
+		miss_modifier -= 60
 	var/hit_zone = get_zone_with_miss_chance(def_zone, target_mob, miss_modifier, ranged_attack=(distance > 1 || original != target_mob)) //if the projectile hits a target we weren't originally aiming at then retain the chance to miss
 
 	var/result = PROJECTILE_FORCE_MISS
@@ -181,7 +203,9 @@
 
 	if(result == PROJECTILE_FORCE_MISS)
 		if(!silenced)
+			var/missound = "sound/weapons/guns/misc/miss[rand(1,4)].ogg"
 			target_mob.visible_message("<span class='notice'>\The [src] misses [target_mob] narrowly!</span>")
+			playsound(target_mob, missound, 60, 1)
 		return 0
 
 	//hit messages
@@ -189,7 +213,7 @@
 		to_chat(target_mob, "<span class='danger'>You've been hit in the [parse_zone(def_zone)] by \the [src]!</span>")
 	else
 		target_mob.visible_message("<span class='danger'>\The [target_mob] is hit by \the [src] in the [parse_zone(def_zone)]!</span>")//X has fired Y is now given by the guns so you cant tell who shot you if you could not see the shooter
-
+	playsound(target_mob, mob_hit_sound, 60, 1)
 	//admin logs
 	if(!no_attack_log)
 		if(istype(firer, /mob))
@@ -237,6 +261,7 @@
 		else
 			passthrough = 1 //so ghosts don't stop bullets
 	else
+		playsound(loc, wall_hitsound, 50)
 		passthrough = (A.bullet_act(src, def_zone) == PROJECTILE_CONTINUE) //backwards compatibility
 		if(isturf(A))
 			for(var/obj/O in A)

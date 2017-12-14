@@ -2,7 +2,7 @@
 	name = "bullet"
 	icon_state = "bullet"
 	fire_sound = 'sound/weapons/gunshot/gunshot_strong.ogg'
-	damage = 50
+	damage = 60
 	damage_type = BRUTE
 	nodamage = 0
 	check_armour = "bullet"
@@ -129,6 +129,8 @@
 /obj/item/projectile/bullet/pistol
 	fire_sound = 'sound/weapons/gunshot/gunshot_pistol.ogg'
 	damage = 25 //9mm, .38, etc
+	fire_sound = "gunshot"
+	damage = 25
 	armor_penetration = 13.5
 
 /obj/item/projectile/bullet/pistol/medium

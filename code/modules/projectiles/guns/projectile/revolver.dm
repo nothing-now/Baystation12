@@ -9,10 +9,10 @@
 	max_shells = 6
 	ammo_type = /obj/item/ammo_casing/a357
 	var/chamber_offset = 0 //how many empty chambers in the cylinder until you hit a round
-
-/obj/item/weapon/gun/projectile/revolver/AltClick()
-	if(CanPhysicallyInteract(usr))
-		spin_cylinder()
+	unload_sound 	= 'sound/weapons/guns/interact/rev_magout.ogg'
+	reload_sound 	= 'sound/weapons/guns/interact/rev_magin.ogg'
+	bulletinsert_sound 	= 'sound/weapons/guns/interact/rev_magin.ogg'
+	magazine_based = 0
 
 /obj/item/weapon/gun/projectile/revolver/verb/spin_cylinder()
 	set name = "Spin cylinder"

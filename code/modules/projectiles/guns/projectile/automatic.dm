@@ -11,6 +11,9 @@
 	ammo_type = /obj/item/ammo_casing/c9mm
 	multi_aim = 1
 	burst_delay = 2
+	fire_sound = 'sound/weapons/guns/fire/smg_fire.ogg'
+	unload_sound = 'sound/weapons/guns/interact/smg_magout.ogg'
+	reload_sound = 'sound/weapons/guns/interact/smg_magin.ogg'
 
 	//machine pistol, easier to one-hand with
 	firemodes = list(
@@ -18,6 +21,26 @@
 		list(mode_name="3-round bursts", burst=3, fire_delay=null, move_delay=4,    one_hand_penalty=1, burst_accuracy=list(0,-1,-1),       dispersion=list(0.0, 0.6, 1.0)),
 		list(mode_name="short bursts",   burst=5, fire_delay=null, move_delay=4,    one_hand_penalty=2, burst_accuracy=list(0,-1,-1,-1,-2), dispersion=list(0.6, 0.6, 1.0, 1.0, 1.2)),
 		)
+
+/obj/item/weapon/gun/projectile/automatic/c20r/oldsmg
+	name = "\improper 9MM Harbinger"
+	desc = "A 9MM SMG, popular among prison gaurds and soldiers alike."
+	icon_state = "smg"
+	item_state = "wt550"
+	wielded_item_state = "smg-wielded"
+	one_hand_penalty = 1
+	auto_eject = 0
+	unload_sound = 'sound/weapons/guns/interact/smg_magout.ogg'
+	reload_sound = 'sound/weapons/guns/interact/smg_magin.ogg'
+	jam_chance = 5
+
+/obj/item/weapon/gun/projectile/automatic/c20r/oldsmg/update_icon()
+	..()
+	if(ammo_magazine)
+		icon_state = "smg"
+	else
+		icon_state = "smg-e"
+
 
 /obj/item/weapon/gun/projectile/automatic/machine_pistol
 	name = ".45 machine pistol"
@@ -62,6 +85,8 @@
 	auto_eject = 1
 	auto_eject_sound = 'sound/weapons/smg_empty_alarm.ogg'
 	one_hand_penalty = 1
+	unload_sound 	= 'sound/weapons/guns/interact/sfrifle_magout.ogg'
+	reload_sound 	= 'sound/weapons/guns/interact/sfrifle_magin.ogg'
 
 	//SMG
 	firemodes = list(
@@ -93,6 +118,9 @@
 	allowed_magazines = /obj/item/ammo_magazine/c556
 	one_hand_penalty = 3
 	wielded_item_state = "arifle-wielded"
+	unload_sound 	= 'sound/weapons/guns/interact/ltrifle_magout.ogg'
+	reload_sound 	= 'sound/weapons/guns/interact/ltrifle_magin.ogg'
+
 
 	//Assault rifle, burst fire degrades quicker than SMG, worse one-handing penalty, slightly increased move delay
 	firemodes = list(
@@ -105,6 +133,7 @@
 	icon_state = (ammo_magazine)? "arifle" : "arifle-empty"
 	wielded_item_state = (ammo_magazine)? "arifle-wielded" : "arifle-wielded-empty"
 	..()
+
 
 /obj/item/weapon/gun/projectile/automatic/wt550
 	name = "9mm machine pistol"
@@ -154,6 +183,8 @@
 	one_hand_penalty = 5
 	burst_delay = 4
 	wielded_item_state = "z8carbine-wielded"
+	unload_sound 	= 'sound/weapons/guns/interact/batrifle_magout.ogg'
+	reload_sound 	= 'sound/weapons/guns/interact/batrifle_magin.ogg'
 	//would have one_hand_penalty=4,5 but the added weight of a grenade launcher makes one-handing even harder
 	firemodes = list(
 		list(mode_name="semiauto",       burst=1,    fire_delay=0,    move_delay=null, use_launcher=null, one_hand_penalty=5, burst_accuracy=null, dispersion=null),
@@ -224,6 +255,8 @@
 	allowed_magazines = list(/obj/item/ammo_magazine/box/a556, /obj/item/ammo_magazine/c556)
 	one_hand_penalty = 6
 	wielded_item_state = "gun_wielded"
+	unload_sound 	= 'sound/weapons/guns/interact/lmg_magout.ogg'
+	reload_sound 	= 'sound/weapons/guns/interact/lmg_magin.ogg'
 
 	//LMG, better sustained fire accuracy than assault rifles (comparable to SMG), higer move delay and one-handing penalty
 	//No single-shot or 3-round-burst modes since using this weapon should come at a cost to flexibility.
@@ -251,12 +284,14 @@
 /obj/item/weapon/gun/projectile/automatic/l6_saw/attack_self(mob/user as mob)
 	if(cover_open)
 		toggle_cover(user) //close the cover
+		playsound(src.loc, 'sound/weapons/guns/interact/lmg_close.ogg', 100, 1)
 	else
 		return ..() //once closed, behave like normal
 
 /obj/item/weapon/gun/projectile/automatic/l6_saw/attack_hand(mob/user as mob)
 	if(!cover_open && user.get_inactive_hand() == src)
 		toggle_cover(user) //open the cover
+		playsound(src.loc, 'sound/weapons/guns/interact/lmg_open.ogg', 100, 1)
 	else
 		return ..() //once open, behave like normal
 

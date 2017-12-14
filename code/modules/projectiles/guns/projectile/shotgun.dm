@@ -1,3 +1,9 @@
+/obj/item/weapon/gun/projectile/shotgun
+	bulletinsert_sound 	= 'sound/weapons/guns/interact/shotgun_instert.ogg'
+	fire_sound = 'sound/weapons/guns/fire/shotgun.ogg'
+	parry_sounds = list('sound/weapons/blunt_parry1.ogg', 'sound/weapons/blunt_parry2.ogg', 'sound/weapons/blunt_parry3.ogg')
+	magazine_based = 0
+
 /obj/item/weapon/gun/projectile/shotgun/pump
 	name = "shotgun"
 	desc = "The mass-produced W-T Remmington 29x shotgun is a favourite of police and security forces on many worlds. Useful for sweeping alleys."
@@ -15,7 +21,10 @@
 	handle_casings = HOLD_CASINGS
 	one_hand_penalty = 2
 	var/recentpump = 0 // to prevent spammage
-	wielded_item_state = "gun_wielded"
+	var/pumpsound = 'sound/weapons/shotgunpump.ogg' //Support for other kinds of pump weapons.
+	var/casingsound = 'sound/weapons/guns/misc/shotgun_fall.ogg' //Same here.
+	wielded_item_state = "wshotgun"
+
 
 /obj/item/weapon/gun/projectile/shotgun/pump/consume_next_projectile()
 	if(chambered)
@@ -28,10 +37,19 @@
 		recentpump = world.time
 
 /obj/item/weapon/gun/projectile/shotgun/pump/proc/pump(mob/M as mob)
-	playsound(M, 'sound/weapons/shotgunpump.ogg', 60, 1)
+	if(is_jammed)
+		M.visible_message("\The [M] begins to unjam [src].", "You begin to clear the jam of [src]")
+		if(!do_after(M, 40, src))
+			return
+		is_jammed = 0
+		playsound(src.loc, 'sound/effects/unjam.ogg', 50, 1)
+		return
+
+	playsound(M, pumpsound, 60, 1)
 
 	if(chambered)//We have a shell in the chamber
 		chambered.loc = get_turf(src)//Eject casing
+		playsound(M, casingsound, 100, 1)
 		chambered = null
 
 	if(loaded.len)
@@ -50,6 +68,7 @@
 	max_shells = 7 //match the ammo box capacity, also it can hold a round in the chamber anyways, for a total of 8.
 	ammo_type = /obj/item/ammo_casing/shotgun
 	one_hand_penalty = 3 //a little heavier than the regular shotgun
+	wielded_item_state = "shotgun-wielded"
 
 /obj/item/weapon/gun/projectile/shotgun/doublebarrel
 	name = "double-barreled shotgun"
@@ -69,7 +88,7 @@
 	origin_tech = list(TECH_COMBAT = 3, TECH_MATERIAL = 1)
 	ammo_type = /obj/item/ammo_casing/shotgun/beanbag
 	one_hand_penalty = 2
-	wielded_item_state = "gun_wielded"
+	wielded_item_state = "rifle-wielded"
 
 	burst_delay = 0
 	firemodes = list(
@@ -121,3 +140,16 @@
 	w_class = ITEM_SIZE_NORMAL
 	force = 5
 	one_hand_penalty = 0
+
+
+/obj/item/weapon/gun/projectile/shotgun/pump/boltaction
+	name = "\improper Mark II Stormrider" //I used a random rifle generator to come up with that.
+	desc = "This piece of junk looks like something that could have been used 700 years ago"
+	icon_state = "mosin"
+	item_state = "mosin"
+	caliber = "a762"
+	bulletinsert_sound 	= 'sound/weapons/guns/interact/rifle_load.ogg'
+	casingsound = 'sound/weapons/guns/misc/casingfall1.ogg'
+	pumpsound = 'sound/weapons/boltpump.ogg'
+	ammo_type = /obj/item/ammo_casing/a762
+	wielded_item_state = "rifle-wielded"
