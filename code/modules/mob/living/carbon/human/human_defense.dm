@@ -7,6 +7,14 @@ meteor_act
 
 */
 
+/obj/item/proc/get_attack_name()
+	if(sharp && edge)
+		return "slices"
+	else if(sharp && !edge)
+		return "stabs"
+	else
+		return "hits"
+
 /mob/living/carbon/human/bullet_act(var/obj/item/projectile/P, var/def_zone)
 
 	def_zone = check_zone(def_zone)
@@ -172,21 +180,56 @@ meteor_act
 		to_chat(user, "<span class='danger'>They are missing that limb!</span>")
 		return null
 
+	var/blocked = run_armor_check(hit_zone, "melee", I.armor_penetration, "Your armor has protected your [affecting.name].", "Your armor has softened the blow to your [affecting.name].")
+
+
+	if(blocked == 100)
+		visible_message("<span class='danger'>[user] [I.get_attack_name()] [src]'s [affecting.name] with the [I], but it does no damage!")
+		return null
+
+	if(hit_zone == BP_CHEST || hit_zone == BP_MOUTH || hit_zone == BP_THROAT || hit_zone == BP_HEAD)//If we're lying and we're trying to aim high, we won't be able to hit.
+		if(user.lying && !src.lying)
+			to_chat(user, "<span class='notice'><b>I can't reach their [affecting.name]!</span></b>")
+			return null
+
 	return hit_zone
 
 /mob/living/carbon/human/hit_with_weapon(obj/item/I, mob/living/user, var/effective_force, var/hit_zone)
+
 	var/obj/item/organ/external/affecting = get_organ(hit_zone)
 	if(!affecting)
 		return //should be prevented by attacked_with_item() but for sanity.
 
-	visible_message("<span class='danger'>[src] has been [I.attack_verb.len? pick(I.attack_verb) : "attacked"] in the [affecting.name] with [I.name] by [user]!</span>")
+	var/aim_zone = user.zone_sel.selecting
+
+
+	var/obj/item/organ/external/aimed = get_organ(aim_zone)
+
+	var/organ_hit = affecting.name//This is spaghetti, but it's done so that it recognizes when you hit the throat, and when you hit something else instead.
+
+	if(aim_zone == BP_THROAT)
+		organ_hit = "throat"
 
 	var/blocked = run_armor_check(hit_zone, "melee", I.armor_penetration, "Your armor has protected your [affecting.name].", "Your armor has softened the blow to your [affecting.name].")
+
+
+	if(hit_zone != aim_zone && (aim_zone != BP_MOUTH) &&  (aim_zone != BP_THROAT) && (aim_zone != BP_EYES))//This is ugly but it works.
+		visible_message("<span class='danger'>[user] aimed for [src]\'s [aimed.name], but [I.get_attack_name()] \his [organ_hit] instead. [(blocked < 20 && blocked > 1)  ? "Slight damage was done." : ""]</span>")
+
+	else if(blocked < 20 && blocked > 1)//This is ugly and it doesn't work.
+		visible_message("<span class='danger'>[user] [I.get_attack_name()] [src]\'s [organ_hit] with the [I.name]! Slight damage was done.<span class='danger'>")//visible_message("<span class='danger'>[src] has been [I.attack_verb.len? pick(I.attack_verb) : "attacked"] in the [organ_hit] with [I.name] by [user]! It only did a little damage!</span>")
+
+	else
+		visible_message("<span class='danger'>[user] [I.get_attack_name()] [src]\'s [organ_hit] with the [I.name]!<span class='danger'>")//visible_message("<span class='danger'>[src] has been [I.attack_verb.len? pick(I.attack_verb) : "attacked"] in the [organ_hit] with [I.name] by [user]!</span>")
+
+	receive_damage()
+
 	standard_weapon_hit_effects(I, user, effective_force, blocked, hit_zone)
 
 	return blocked
 
 /mob/living/carbon/human/standard_weapon_hit_effects(obj/item/I, mob/living/user, var/effective_force, var/blocked, var/hit_zone)
+	hit_zone = user.zone_sel.selecting
 	var/obj/item/organ/external/affecting = get_organ(hit_zone)
 	if(!affecting)
 		return 0
@@ -205,7 +248,34 @@ meteor_act
 
 	if(effective_force > 10 || effective_force >= 5 && prob(33))
 		forcesay(GLOB.hit_appends)	//forcesay checks stat already
-	if((I.damtype == BRUTE || I.damtype == PAIN) && prob(25 + (effective_force * 2)))
+
+	//Ok this block of text handles cutting arteries, tendons, and limbs off.
+	//First we cut an artery, the reason for that, is that arteries are funninly enough, not that lethal, and don't have the biggest impact. They'll still make you bleed out, but they're less immediately lethal.
+	if(I.sharp && prob(I.sharpness * 2) && !(affecting.status & ORGAN_ARTERY_CUT))
+		affecting.sever_artery()
+		if(affecting.artery_name == "cartoid artery")
+			src.visible_message("<span class='danger'>[user] slices [src]'s throat!</span>")
+		else
+			src.visible_message("<span class='danger'>[user] slices open [src]'s [affecting.artery_name] artery!</span>")
+	
+	//Next tendon, which disables the limb, but does not remove it, making it easier to fix, and less lethal, than losing it.
+	else if(I.sharp && (I.sharpness * 2) && !(affecting.status & ORGAN_TENDON_CUT) && affecting.has_tendon)//Yes this is the same exactly probability again. But I'm running it seperate because I don't want the two to be exclusive.
+		affecting.sever_tendon()
+		src.visible_message("<span class='danger'>[user] slices open [src]'s [affecting.tendon_name] tendon!</span>")
+
+	//Finally if we pass all that, we cut the limb off. This should reduce the number of one hit sword kills.
+	else if(I.sharp && I.edge)
+		if(prob(I.sharpness * strToDamageModifier(user.str)))
+			affecting.droplimb(0, DROPLIMB_EDGE)
+
+	var/obj/item/organ/external/head/O = locate(/obj/item/organ/external/head) in src.organs
+
+	if(I.damtype == BRUTE && !I.edge && prob(I.force * (hit_zone == BP_MOUTH ? 6 : 0)) && O)//Knocking out teeth.
+		if(O.knock_out_teeth(get_dir(user, src), round(rand(28, 38) * ((I.force*1.5)/100))))
+			src.visible_message("<span class='danger'>[src]'s teeth sail off in an arc!</span>", \
+								"<span class='userdanger'>[src]'s teeth sail off in an arc!</span>")
+
+	else if((I.damtype == BRUTE || I.damtype == PAIN) && prob(25 + (effective_force * 2)))//Knocking them out.
 		if(!stat)
 			if(headcheck(hit_zone))
 				//Harder to score a stun but if you do it lasts a bit longer
@@ -217,9 +287,10 @@ meteor_act
 				if(prob(effective_force + 10))
 					visible_message("<span class='danger'>[src] has been knocked down!</span>")
 					apply_effect(6, WEAKEN, blocked)
-
 		//Apply blood
 		attack_bloody(I, user, effective_force, hit_zone)
+	if(user.skillcheck(user.melee_skill,0,0) == CRIT_SUCCESS)
+		resolve_critical_hit()
 
 	return 1
 
@@ -258,6 +329,16 @@ meteor_act
 					update_inv_glasses(0)
 			if(BP_CHEST)
 				bloody_body(src)
+
+	//All this is copypasta'd from projectile code. Basically there's a cool splat animation when someone gets hit by something.
+	var/splatter_dir = dir
+	var/turf/target_loca = get_turf(src)
+	splatter_dir = get_dir(attacker, target_loca)
+	target_loca = get_step(target_loca, splatter_dir)
+	var/blood_color = "#C80000"
+	blood_color = src.species.blood_color
+	new /obj/effect/overlay/temp/dir_setting/bloodsplatter(target_loca, splatter_dir, blood_color)
+	target_loca.add_blood(src)
 
 /mob/living/carbon/human/proc/projectile_hit_bloody(obj/item/projectile/P, var/effective_force, var/hit_zone)
 	if(P.damage_type != BRUTE || P.nodamage)
@@ -348,6 +429,7 @@ meteor_act
 
 		if(!zone)
 			visible_message("<span class='notice'>\The [O] misses [src] narrowly!</span>")
+			playsound(loc, 'sound/weapons/punchmiss.ogg', 50, 1)
 			return
 
 		O.throwing = 0		//it hit, so stop moving
@@ -490,3 +572,112 @@ meteor_act
 		perm += perm_by_part[part]
 
 	return perm
+
+/mob/living/carbon/human/kick_act(var/mob/living/user)
+	if(!..())//If we can't kick then this doesn't happen.
+		return
+	if(user == src)//Can't kick yourself dummy.
+		return
+
+	var/hit_zone = user.zone_sel.selecting
+	var/too_high_message = "You can't reach that high."
+	var/obj/item/organ/external/affecting = get_organ(hit_zone)
+	if(!affecting || affecting.is_stump())
+		to_chat(user, "<span class='danger'>They are missing that limb!</span>")
+		return
+
+	var/armour = run_armor_check(hit_zone, "melee")
+	switch(hit_zone)
+		if(BP_CHEST)//If we aim for the chest we kick them in the direction we're facing.
+			if(lying)
+				var/turf/target = get_turf(src.loc)
+				var/range = src.throw_range
+				var/throw_dir = get_dir(user, src)
+				for(var/i = 1; i < range; i++)
+					var/turf/new_turf = get_step(target, throw_dir)
+					target = new_turf
+					if(new_turf.density)
+						break
+				src.throw_at(target, rand(1,3), src.throw_speed)
+			if(user.lying)
+				to_chat(user, too_high_message)
+					return
+
+		if(BP_MOUTH)//If we aim for the mouth then we kick their teeth out.
+			if(lying)
+				if(istype(affecting, /obj/item/organ/external/head) && prob(95))
+					var/obj/item/organ/external/head/U = affecting
+					U.knock_out_teeth(get_dir(user, src), rand(1,3))//Knocking out one tooth at a time.
+			else
+				to_chat(user, too_high_message)
+				return
+
+		if(BP_HEAD)
+			if(!lying)
+				to_chat(user, too_high_message)
+				return
+
+	var/kickdam = rand(0,15)
+	user.adjustStaminaLoss(rand(10,15))//Kicking someone is a big deal.
+	if(kickdam)
+		playsound(user.loc, 'sound/weapons/kick.ogg', 50, 0)
+		apply_damage(kickdam, BRUTE, hit_zone, armour)
+		user.visible_message("<span class=danger>[user] kicks [src] in the [affecting.name]!<span>")
+		admin_attack_log(user, src, "Has kicked [src]", "Has been kicked by [user].")
+	else
+		user.visible_message("<span class=danger>[user] tried to kick [src] in the [affecting.name], but missed!<span>")
+		playsound(loc, 'sound/weapons/punchmiss.ogg', 50, 1)
+
+
+//We crit failed, let's see what happens to us.
+/mob/living/proc/resolve_critical_miss(var/obj/item/I)
+	var/result = rand(1,3)
+
+	if(!I)
+		visible_message("<span class='danger'>[src] punches themself in the face!</span>")
+		attack_hand(src)
+		return
+
+	switch(result)
+		if(1)//They drop their weapon.
+			visible_message("<span class='danger'><big>CRITICAL FAILURE! \The [I] flies out of [src]'s hand!</big></span>")
+			drop_from_inventory(I)
+			throw_at(get_edge_target_turf(I, pick(alldirs)), rand(1,3), throw_speed)//Throw that sheesh away
+			return
+		if(2)
+			visible_message("<span class='danger'><big>CRITICAL FAILURE! [src] botches the attack, stumbles, and falls!</big></span>")
+			playsound(loc, 'sound/weapons/punchmiss.ogg', 50, 1)
+			Weaken(1)
+			Stun(3)
+			return
+		if(3)
+			visible_message("<span class='danger'><big>CRITICAL FAILURE! [src] botches the attack and hits themself!</big></span>")
+			attackby(I, src)
+
+/mob/living/proc/resolve_critical_hit()
+	var/result = rand(1,3)
+
+	switch(result)
+		if(1)
+			visible_message("<span class='danger'><big>CRITICAL HIT! IT MUST BE PAINFUL</big></span>")
+			apply_damage(rand(5,10), BRUTE)
+			return
+
+		if(2)
+			visible_message("<span class='danger'><big>CRITICAL HIT! [src] is stunned!</big></span>")
+			Weaken(1)
+			Stun(3)
+			return
+
+		if(3)
+			visible_message("<span class='danger'><big>CRITICAL HIT! [src] is knocked unconcious by the blow!</big></span>")
+			apply_effect(20, PARALYZE)
+			return
+
+/*
+//Add screaming here.
+/mob/living/carbon/human/IgniteMob()
+	..()
+	if(!stat &&)
+
+*/

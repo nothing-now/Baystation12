@@ -41,6 +41,10 @@
 	GLOB.human_mob_list |= src
 	..()
 
+	add_teeth()
+	bladder = rand(0,100)
+	bowels = rand(0, 100)
+
 	if(dna)
 		dna.ready_dna(src)
 		dna.real_name = real_name
@@ -57,8 +61,9 @@
 /mob/living/carbon/human/Stat()
 	. = ..()
 	if(statpanel("Status"))
-		stat("Intent:", "[a_intent]")
-		stat("Move Mode:", "[m_intent]")
+		stat("ST:", "[str]")//Stats!
+		stat("DX:", "[dex]")
+		stat("IT:", "[int]")
 
 		if(evacuation_controller)
 			var/eta_status = evacuation_controller.get_status_panel_eta()
@@ -295,8 +300,10 @@
 /mob/living/carbon/human/proc/get_visible_name()
 	var/face_name = get_face_name()
 	var/id_name = get_id_name("")
-	if((face_name == "Unknown") && id_name && (id_name != face_name))
+	if(id_name && (id_name != face_name) && face_name != "Unknown")
 		return "[face_name] (as [id_name])"
+	else if(id_name && (id_name != face_name) && face_name == "Unknown")//Hacky af.
+		return id_name
 	return face_name
 
 //Returns "Unknown" if facially disfigured and real_name if not. Useful for setting name when polyacided or when updating a human's name variable
@@ -304,10 +311,7 @@
 /mob/living/carbon/human/proc/get_face_name()
 	var/obj/item/organ/external/H = get_organ(BP_HEAD)
 	if(!H || H.disfigured || H.is_stump() || !real_name || (HUSK in mutations) || (wear_mask && (wear_mask.flags_inv&HIDEFACE)) || (head && (head.flags_inv&HIDEFACE)))	//Face is unrecognizeable, use ID if able
-		if(istype(wear_mask))
-			return wear_mask.visible_name
-		else
-			return "Unknown"
+		return "Unknown"
 	return real_name
 
 //gets name from ID or PDA itself, ID inside PDA doesn't matter
@@ -322,6 +326,13 @@
 		if(I)
 			return I.registered_name
 	return
+
+/mob/living/carbon/human/proc/get_job_name()
+	if(wear_id)
+		var/obj/item/weapon/card/id/I = wear_id.GetIdCard()
+		if(I)
+			return I.assignment
+
 
 //gets ID card object from special clothes slot or null.
 /mob/living/carbon/human/proc/get_idcard()
@@ -544,13 +555,22 @@
 				return
 			if("general")
 				var/msg = sanitize(input(usr,"Update the general description of your character. This will be shown regardless of clothing, and may include OOC notes and preferences.","Flavor Text",html_decode(flavor_texts[href_list["flavor_change"]])) as message, extra = 0)
-				flavor_texts[href_list["flavor_change"]] = msg
+				flavor_texts[href_list["flavor_change"]] = post_edit_cp1251(sanitize(msg, extra = 0))
 				return
 			else
 				var/msg = sanitize(input(usr,"Update the flavor text for your [href_list["flavor_change"]].","Flavor Text",html_decode(flavor_texts[href_list["flavor_change"]])) as message, extra = 0)
-				flavor_texts[href_list["flavor_change"]] = msg
-				set_flavor()
+				flavor_texts[href_list["flavor_change"]] = post_edit_cp1251(sanitize(msg, extra = 0))
+			//	set_flavor()
 				return
+	//Crafting
+	if (href_list["craft"])
+		var/turf/T = get_step(src, dir)
+		if(!T.Adjacent(src))
+			return 0
+		var/rname = href_list["craft"]
+		var/datum/crafting_recipe/R = crafting_recipes[rname]
+		R.make(src, T)
+
 	..()
 	return
 
@@ -665,6 +685,9 @@
 
 					src.visible_message("<span class='warning'>[src] throws up!</span>","<span class='warning'>You throw up!</span>")
 					playsound(loc, 'sound/effects/splat.ogg', 50, 1)
+
+					adjust_hygiene(-25)
+					add_event("hygiene", /datum/happiness_event/hygiene/vomitted)
 
 					var/turf/location = loc
 					if (istype(location, /turf/simulated))
@@ -844,6 +867,7 @@
 
 	species.create_organs(src) // Reset our organs/limbs.
 	restore_all_organs()       // Reapply robotics/amputated status from preferences.
+	add_teeth()
 
 	if(!client || !key) //Don't boot out anyone already in the mob.
 		for (var/obj/item/organ/internal/brain/H in world)
@@ -861,6 +885,14 @@
 	losebreath = 0
 
 	..()
+/mob/living/carbon/human/proc/add_teeth()
+	var/obj/item/organ/external/head/U = locate() in organs
+	if(istype(U))
+		U.teeth_list.Cut() //Clear out their mouth of teeth
+		var/obj/item/stack/teeth/T = new species.teeth_type(U)
+		U.max_teeth = T.max_amount //Set max teeth for the head based on teeth spawntype
+		T.amount = T.max_amount
+		U.teeth_list += T
 
 /mob/living/carbon/human/proc/is_lung_ruptured()
 	var/obj/item/organ/internal/lungs/L = internal_organs_by_name[BP_LUNGS]
@@ -1094,6 +1126,8 @@
 		var/obj/item/clothing/C = get_equipped_item(slot)
 		if(istype(C) && !C.mob_can_equip(src, slot, 1))
 			unEquip(C)
+
+	add_teeth()
 
 	return 1
 
@@ -1440,53 +1474,96 @@
 	if(src != M)
 		..()
 	else
-		visible_message( \
-			"<span class='notice'>[src] examines [gender==MALE ? "himself" : "herself"].</span>", \
-			"<span class='notice'>You check yourself for injuries.</span>" \
-			)
-
-		for(var/obj/item/organ/external/org in organs)
-			var/list/status = list()
-
-			var/feels = 1 + round(org.pain/100, 0.1)
-			var/brutedamage = org.brute_dam * feels
-			var/burndamage = org.burn_dam * feels
-
-			switch(brutedamage)
-				if(1 to 20)
-					status += "bruised"
-				if(20 to 40)
-					status += "wounded"
-				if(40 to INFINITY)
-					status += "mangled"
-
-			switch(burndamage)
-				if(1 to 10)
-					status += "numb"
-				if(10 to 40)
-					status += "blistered"
-				if(40 to INFINITY)
-					status += "peeling away"
-
-			if(org.is_stump())
-				status += "MISSING"
-			if(org.status & ORGAN_MUTATED)
-				status += "misshapen"
-			if(org.dislocated == 2)
-				status += "dislocated"
-			if(org.status & ORGAN_BROKEN)
-				status += "hurts when touched"
-			if(org.status & ORGAN_DEAD)
-				status += "is bruised and necrotic"
-			if(!org.is_usable() || org.is_dislocated())
-				status += "dangling uselessly"
-			if(status.len)
-				src.show_message("My [org.name] is <span class='warning'>[english_list(status)].</span>",1)
-			else
-				src.show_message("My [org.name] is <span class='notice'>OK.</span>",1)
+		exam_self()
 
 		if((SKELETON in mutations) && (!w_uniform) && (!wear_suit))
 			play_xylophone()
+
+/mob/living/carbon/human/proc/exam_self()
+	if(!stat)
+		visible_message( \
+			"<span class='notice'>[src] examines [gender==MALE ? "himself" : "herself"].</span>", \
+			"<span class='notice'><b>Let's see how I am doing.</b></span>" \
+			)
+	else//We don't want to spam the chat that we're checking ourselves for injuries when we're out fucking cold.
+		to_chat(src, "<span class='notice'><b>Let's see how I am doing.</b></span>")
+
+
+
+		//var/feels = 1 + round(org.pain/100, 0.1)
+		//var/brutedamage = org.brute_dam * feels
+		//var/burndamage = org.burn_dam * feels
+		/*
+		switch(brutedamage)
+			if(1 to 20)
+				status += "bruised"
+			if(20 to 40)
+				status += "wounded"
+			if(40 to INFINITY)
+				status += "mangled"
+
+		switch(burndamage)
+			if(1 to 10)
+				status += "numb"
+			if(10 to 40)
+				status += "blistered"
+			if(40 to INFINITY)
+				status += "peeling away"
+		*/
+	for(var/obj/item/organ/external/org in organs)
+		var/list/status = list()
+		var/hurts = org.get_pain() + org.get_damage()
+
+		if(!(chem_effects[CE_PAINKILLER] > 50))
+			switch(hurts)
+				if(1 to 25)
+					status += "<small>pain</small>"
+				if(25 to 75)
+					status += "pain"
+				if(75 to INFINITY)
+					status += "<big>PAIN</big>"
+
+		if(org.is_stump())
+			status += "MISSING"
+		if(org.status & ORGAN_MUTATED)
+			status += "MISSHAPEN"
+		if(org.status & ORGAN_BLEEDING)
+			status += "BLEEDING"
+		if(org.dislocated == 2)
+			status += "DISLOCATED"
+		if(org.status & ORGAN_BROKEN)
+			status += "BROKEN"
+		if(org.status & ORGAN_DEAD)
+			status += "NECROTIC"
+		if(!org.is_usable() || org.is_dislocated())
+			status += "UNUSABLE"
+		if(status.len)
+			to_chat(src, "<b>[capitalize(org.name)]:</b> <span class='danger'>[english_list(status)]!</span>")
+		else
+			to_chat(src, "<b>[capitalize(org.name)]:</b> <span class='notice'>OK</span>")
+
+/mob/living/carbon/human/throw_impact(atom/hit_atom)
+	if(iswall(hit_atom))
+		var/damage = rand(0, 10)
+		var/smashsound = pick("sound/effects/gore/smash[rand(1,3)].ogg", "sound/effects/gore/trauma1.ogg")
+		playsound(loc, smashsound, 50, 1, -1)
+
+		var/blocked = run_armor_check(BP_HEAD,"melee")
+		apply_damage(damage, BRUTE, BP_HEAD, blocked)
+
+		blocked = run_armor_check(BP_CHEST,"melee")
+		apply_damage(damage, BRUTE, BP_CHEST, blocked)
+
+		blocked = run_armor_check(BP_GROIN,"melee")
+		apply_damage(damage, BRUTE, BP_GROIN, blocked)
+
+		updatehealth()
+		if(damage)
+			hit_atom.add_blood(src)
+		..()
+
+	else
+		..()
 
 /mob/living/carbon/human/proc/resuscitate()
 	if(!is_asystole() || !should_have_organ(BP_HEART))

@@ -84,6 +84,12 @@
 
 /mob/proc/hear_radio(var/message, var/verb="says", var/datum/language/language=null, var/part_a, var/part_b, var/part_c, var/mob/speaker = null, var/hard_to_hear = 0, var/vname ="")
 
+	var/radio_sound = list('sound/effects/radio1.ogg', 'sound/effects/radio2.ogg', 'sound/effects/radio3.ogg', 'sound/effects/radio4.ogg')
+
+	if(!isobserver(src))
+		//playsound(loc, 'sound/effects/radio_chatter.ogg', 25, 0, -1)//They won't always be able to read the message, but the sound will play regardless.
+		playsound(loc, pick(radio_sound), 15, 0, -1)
+
 	if(!client)
 		return
 
@@ -92,6 +98,7 @@
 		return
 
 	var/track = null
+	var/jobname // the mob's "job"
 
 	//non-verbal languages are garbled if you can't see the speaker. Yes, this includes if they are inside a closet.
 	if (language && (language.flags & NONVERBAL))
@@ -118,12 +125,26 @@
 			else // Used for compression
 				message = RadioChat(null, message, 80, 1+(hard_to_hear/10))
 
-	var/speaker_name = vname ? vname : speaker.name
+	var/speaker_name = speaker.name
+
+	if(vname)
+		speaker_name = vname
 
 	if(istype(speaker, /mob/living/carbon/human))
 		var/mob/living/carbon/human/H = speaker
 		if(H.voice)
 			speaker_name = H.voice
+
+		if(H.age && H.gender)//If they have an age and gender
+			var/ageAndGender
+			jobname = H.get_assignment()
+
+			if(H.get_assignment() == "No id")//If they don't have an ID then we don't know their job.
+				jobname = ""
+
+			ageAndGender = ageAndGender2Desc(H.age, H.gender)//Get their age and gender
+
+			speaker_name += " \[" + "[jobname] " + "[ageAndGender]" + "]"//Print it out.
 
 	if(hard_to_hear)
 		speaker_name = "unknown"
@@ -131,7 +152,6 @@
 	var/changed_voice
 
 	if(istype(src, /mob/living/silicon/ai) && !hard_to_hear)
-		var/jobname // the mob's "job"
 		var/mob/living/carbon/human/impersonating //The crew member being impersonated, if any.
 
 		if (ishuman(speaker))
@@ -170,13 +190,13 @@
 		else
 			jobname = "Unknown"
 
-		if(changed_voice)
+		if(changed_voice) // Fix for AI tracking camera.
 			if(impersonating)
-				track = "<a href='byond://?src=\ref[src];trackname=[html_encode(speaker_name)];track=\ref[impersonating]'>[speaker_name] ([jobname])</a>"
+				track = "<a href='byond://?src=\ref[src];trackname=[html_encode(speaker.voice_name)];track=\ref[impersonating]'>[speaker_name] ([jobname])</a>"
 			else
 				track = "[speaker_name] ([jobname])"
 		else
-			track = "<a href='byond://?src=\ref[src];trackname=[html_encode(speaker_name)];track=\ref[speaker]'>[speaker_name] ([jobname])</a>"
+			track = "<a href='byond://?src=\ref[src];trackname=[html_encode(speaker.real_name)];track=\ref[speaker]'>[speaker_name] ([jobname])</a>"
 
 	if(isghost(src))
 		if(speaker_name != speaker.real_name && !isAI(speaker)) //Announce computer and various stuff that broadcasts doesn't use it's real name but AI's can't pretend to be other mobs.

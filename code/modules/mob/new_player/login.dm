@@ -1,7 +1,7 @@
 /var/obj/effect/lobby_image = new/obj/effect/lobby_image()
 
 /obj/effect/lobby_image
-	name = "Baystation12"
+	name = "InterBay"
 	desc = "This shouldn't be read."
 	screen_loc = "WEST,SOUTH"
 
@@ -40,6 +40,6 @@
 	new_player_panel()
 	spawn(40)
 		if(client)
-			handle_privacy_poll()
+			//handle_privacy_poll() Fucking Bay POLL - removed.
 			client.playtitlemusic()
 			maybe_send_staffwarns("connected as new player")

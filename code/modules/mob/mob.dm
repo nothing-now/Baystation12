@@ -628,8 +628,8 @@
 
 	if(statpanel("Status"))
 		if(ticker && ticker.current_state != GAME_STATE_PREGAME)
-			stat("Local Time", stationtime2text())
-			stat("Local Date", stationdate2text())
+			//stat("Local Time", stationtime2text())
+			//stat("Local Date", stationdate2text())
 			stat("Round Duration", roundduration2text())
 		if(client.holder || isghost(client.mob))
 			stat("Location:", "([x], [y], [z]) [loc]")
@@ -704,8 +704,6 @@
 
 	if(lying)
 		set_density(0)
-		if(l_hand) unEquip(l_hand)
-		if(r_hand) unEquip(r_hand)
 	else
 		set_density(initial(density))
 	reset_layer()
@@ -725,6 +723,7 @@
 		regenerate_icons()
 	else if( lying != lying_prev )
 		update_icons()
+	update_vision_cone()
 
 	return canmove
 
@@ -773,6 +772,8 @@
 	if(status_flags & CANSTUN)
 		facing_dir = null
 		stunned = max(max(stunned,amount),0) //can't go below 0, getting a low amount of stun doesn't lower your current stun
+		if(l_hand) unEquip(l_hand)
+		if(r_hand) unEquip(r_hand)
 	return
 
 /mob/proc/SetStunned(amount) //if you REALLY need to set stun to a set amount without the whole "can't go below current stunned"
@@ -790,6 +791,7 @@
 		facing_dir = null
 		weakened = max(max(weakened,amount),0)
 		update_canmove()	//updates lying, canmove and icons
+		resting = 1
 	return
 
 /mob/proc/SetWeakened(amount)
@@ -808,6 +810,9 @@
 	if(status_flags & CANPARALYSE)
 		facing_dir = null
 		paralysis = max(max(paralysis,amount),0)
+		if(l_hand) unEquip(l_hand)
+		if(r_hand) unEquip(r_hand)
+		resting = 1
 	return
 
 /mob/proc/SetParalysis(amount)
@@ -823,6 +828,9 @@
 /mob/proc/Sleeping(amount)
 	facing_dir = null
 	sleeping = max(max(sleeping,amount),0)
+	if(l_hand) unEquip(l_hand)
+	if(r_hand) unEquip(r_hand)
+	resting =1
 	return
 
 /mob/proc/SetSleeping(amount)
@@ -848,9 +856,6 @@
 
 /mob/proc/get_species()
 	return ""
-
-/mob/proc/flash_weak_pain()
-	flick("weak_pain",pain)
 
 /mob/proc/get_visible_implants(var/class = 0)
 	var/list/visible_implants = list()
@@ -967,18 +972,10 @@ mob/proc/yank_out_object()
 /mob/update_icon()
 	return
 
-/mob/verb/face_direction()
-
-	set name = "Face Direction"
-	set category = "IC"
-	set src = usr
-
+/mob/proc/face_direction()
 	set_face_dir()
 
-	if(!facing_dir)
-		to_chat(usr, "You are now not facing anything.")
-	else
-		to_chat(usr, "You are now facing [dir2text(facing_dir)].")
+
 /mob/proc/set_face_dir(var/newdir)
 	if(!isnull(facing_dir) && newdir == facing_dir)
 		facing_dir = null

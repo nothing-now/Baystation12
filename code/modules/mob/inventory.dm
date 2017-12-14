@@ -122,13 +122,13 @@ var/list/slot_equipment_priority = list( \
 
 //Puts the item into your l_hand if possible and calls all necessary triggers/updates. returns 1 on success.
 /mob/proc/put_in_l_hand(var/obj/item/W)
-	if(lying || !istype(W))
+	if(!istype(W))//lying ||
 		return 0
 	return 1
 
 //Puts the item into your r_hand if possible and calls all necessary triggers/updates. returns 1 on success.
 /mob/proc/put_in_r_hand(var/obj/item/W)
-	if(lying || !istype(W))
+	if(!istype(W))//lying ||
 		return 0
 	return 1
 
@@ -169,8 +169,20 @@ var/list/slot_equipment_priority = list( \
 
 //Drops the item in our active hand. TODO: rename this to drop_active_hand or something
 /mob/proc/drop_item(var/atom/Target)
-	if(hand)	return drop_l_hand(Target)
-	else		return drop_r_hand(Target)
+	if(hand)
+		make_item_drop_sound()
+		return drop_l_hand(Target)
+	else
+		make_item_drop_sound()
+		return drop_r_hand(Target)
+
+/mob/proc/make_item_drop_sound()
+	var/obj/item/I = get_active_hand()
+	spawn (1)
+		if(!I)
+			return
+		if(I.drop_sound)
+			playsound(I, I.drop_sound, 25, 0)
 
 /*
 	Removes the object from any slots the mob might have, calling the appropriate icon update proc.

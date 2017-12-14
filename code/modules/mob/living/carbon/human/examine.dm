@@ -1,4 +1,8 @@
 /mob/living/carbon/human/examine(mob/user)
+	user.visible_message("<small>[user] looks at [src].</small>")
+	if(get_dist(user,src) > 5)//Don't get descriptions of things far away.
+		to_chat(user, "<span class='info'>It's too far away to see clearly.</span>")
+		return
 	var/skipgloves = 0
 	var/skipsuitstorage = 0
 	var/skipjumpsuit = 0
@@ -49,7 +53,7 @@
 		if(is_synth && species.type != /datum/species/machine)
 			species_name += "Cyborg "
 		species_name += "[species.name]"
-		msg += ", <b><font color='[species.get_flesh_colour(src)]'> \a [species_name]!</font></b>"
+//		msg += ", <b><font color='[species.get_flesh_colour(src)]'> \a [species_name]!</font></b>"
 	var/extra_species_text = species.get_additional_examine_text(src)
 	if(extra_species_text)
 		msg += "[extra_species_text]<br>"
@@ -129,6 +133,14 @@
 	//buckled
 	if(buckled)
 		msg += "<span class='warning'>[T.He] [T.is] \icon[buckled] buckled to [buckled]!</span>\n"
+	if(str > user.str && str < (user.str + 5))
+		msg += "[T.He] looks stronger than you.\n"
+
+	if(str > (user.str + 5))
+		msg += "<b>[T.He] looks a lot stronger than you.</b>\n"
+
+	if(str < user.str)
+		msg += "[T.He] looks weaker than you.\n"
 
 	//Jitters
 	if(is_jittery)
@@ -177,8 +189,20 @@
 
 	if(fire_stacks)
 		msg += "[T.He] looks flammable.\n"
+
 	if(on_fire)
 		msg += "<span class='warning'>[T.He] [T.is] on fire!.</span>\n"
+
+	msg += "<span class='warning'>"
+
+
+	if(nutrition < 100)
+		msg += "[T.He] [T.is] severely malnourished.\n"
+	else if(nutrition >= 500)
+		msg += "[T.He] [T.is] quite chubby.\n"
+
+
+	msg += "</span>"
 
 	var/ssd_msg = species.get_ssd(src)
 	if(ssd_msg && (!should_have_organ(BP_BRAIN) || has_brain()) && stat != DEAD)
@@ -186,6 +210,17 @@
 			msg += "<span class='deadsay'>[T.He] [T.is] [ssd_msg]. It doesn't look like [T.he] [T.is] waking up anytime soon.</span>\n"
 		else if(!client)
 			msg += "<span class='deadsay'>[T.He] [T.is] [ssd_msg].</span>\n"
+
+	var/mhealth = (getBruteLoss() + getFireLoss())//How injured they look. Not not nescessarily how hurt they actually are.
+
+	if(mhealth >= 25 && mhealth < 50)//Is the person a little hurt?
+		msg += "<span class='warning'><b>[T.He] looks somewhat injured.\n</b></span>"
+
+	if(mhealth >= 50 && mhealth < 75)//Hurt.
+		msg += "<span class='warning'><b>[T.He] looks injured.</b></span>\n"
+
+	if(mhealth >= 75)//Or incredibly hurt.
+		msg += "<span class='warning'><b>[T.He] looks incredibly injured.</b>\n</span>"
 
 	var/list/wound_flavor_text = list()
 	var/applying_pressure = ""
@@ -219,19 +254,19 @@
 		else
 			if(E.is_stump())
 				wound_flavor_text[E.name] += "<b>[T.He] [T.has] a stump where [T.his] [organ_descriptor] should be.</b>\n"
-				if(E.wounds.len && E.parent)
-					wound_flavor_text[E.name] += "[T.He] [T.has] [E.get_wounds_desc()] on [T.his] [E.parent.name].<br>"
+				//if((E.wounds.len || E.open) && E.parent)
+				//	wound_flavor_text[E.name] += "[T.He] [T.has] [E.get_wounds_desc()] on [T.his] [E.parent.name].<br>"
 			else
 				if(!is_synth && E.robotic >= ORGAN_ROBOT && (E.parent && E.parent.robotic < ORGAN_ROBOT))
 					wound_flavor_text[E.name] = "[T.He] [T.has] a [E.name].\n"
-				var/wounddesc = E.get_wounds_desc()
-				if(wounddesc != "nothing")
-					wound_flavor_text[E.name] += "[T.He] [T.has] [wounddesc] on [T.his] [E.name].<br>"
+				//var/wounddesc = E.get_wounds_desc()
+				//if(wounddesc != "nothing")
+				//	wound_flavor_text[E.name] += "[T.He] [T.has] [wounddesc] on [T.his] [E.name].<br>"
 		if(!hidden || distance <=1)
 			if(E.dislocated > 0)
 				wound_flavor_text[E.name] += "[T.His] [E.joint] is dislocated!<br>"
 			if(((E.status & ORGAN_BROKEN) && E.brute_dam > E.min_broken_damage) || (E.status & ORGAN_MUTATED))
-				wound_flavor_text[E.name] += "[T.His] [E.name] is dented and swollen!<br>"
+				wound_flavor_text[E.name] += "[T.His] [E.name] is broken!<br>"
 
 		for(var/datum/wound/wound in E.wounds)
 			if(wound.embedded_objects.len)
@@ -334,13 +369,13 @@
 				return 0
 	else
 		return 0
-
+/*
 /mob/living/carbon/human/verb/pose()
 	set name = "Set Pose"
 	set desc = "Sets a description which will be shown when someone examines you."
 	set category = "IC"
 
-	pose =  sanitize(input(usr, "This is [src]. [get_visible_gender() == MALE ? "He" : get_visible_gender() == FEMALE ? "She" : "They"]...", "Pose", null)  as text)
+	pose =  sanitize(input(usr, "This is [src]. [get_visible_gender() == MALE ? "He" : get_visible_gender() == FEMALE ? "She" : "They"] [get_visible_gender() == NEUTER ? "are" : "is"]...", "Pose", null)  as text)
 
 /mob/living/carbon/human/verb/set_flavor()
 	set name = "Set Flavour Text"
@@ -383,3 +418,4 @@
 	HTML +="<a href='?src=\ref[src];flavor_change=done'>\[Done\]</a>"
 	HTML += "<tt>"
 	src << browse(jointext(HTML,null), "window=flavor_changes;size=430x300")
+*/

@@ -124,6 +124,8 @@ var/list/global/organ_rel_size = list(
 			zone = BP_HEAD
 		if(BP_MOUTH)
 			zone = BP_HEAD
+		if(BP_THROAT)
+			zone = BP_HEAD
 	return zone
 
 // Returns zone with a certain probability. If the probability fails, or no zone is specified, then a random body part is chosen.
@@ -226,9 +228,9 @@ proc/slur(phrase)
 			if(1,3,5,8)	newletter="[lowertext(newletter)]"
 			if(2,4,6,15)	newletter="[uppertext(newletter)]"
 			if(7)	newletter+="'"
-			//if(9,10)	newletter="<b>[newletter]</b>"
-			//if(11,12)	newletter="<big>[newletter]</big>"
-			//if(13)	newletter="<small>[newletter]</small>"
+			if(9,10)	newletter="<b>[newletter]</b>"
+			if(11,12)	newletter="<big>[newletter]</big>"
+			if(13)	newletter="<small>[newletter]</small>"
 		newphrase+="[newletter]";counter-=1
 	return newphrase
 
@@ -273,6 +275,35 @@ proc/Gibberish(t, p)//t is the inputted message, and any value higher than 70 fo
 
 	return returntext
 
+/proc/lisp(message, intensity=100) //Intensity = how hard will the dude be lisped
+	message = html_decode(message)
+	message = prob(intensity) ? replacetext(message, "f", "ph") : message
+	message = prob(intensity) ? replacetext(message, "t", "ph") : message
+	message = prob(intensity) ? replacetext(message, "s", "sh") : message
+	message = prob(intensity) ? replacetext(message, "th", "hh") : message
+	message = prob(intensity) ? replacetext(message, "ck", "gh") : message
+	message = prob(intensity) ? replacetext(message, "c", "gh") : message
+	message = prob(intensity) ? replacetext(message, "k", "gh") : message
+	return message
+
+/proc/tongueless(message)
+	message = html_decode(message)
+	message = replacetext(message, "c", "h")
+	message = replacetext(message, "d", "a")
+	message = replacetext(message, "i", "a")
+	message = replacetext(message, "k", "a")
+	message = replacetext(message, "j", "a")
+	message = replacetext(message, "l", "a")
+	message = replacetext(message, "n", "a")
+	message = replacetext(message, "q", "h")
+	message = replacetext(message, "r", "a")
+	message = replacetext(message, "s", "h")
+	message = replacetext(message, "t", "a")
+	message = replacetext(message, "v", "h")
+	message = replacetext(message, "x", "a")
+	message = replacetext(message, "y", "a")
+	message = replacetext(message, "z", "h")
+	return message
 
 /proc/ninjaspeak(n)
 /*

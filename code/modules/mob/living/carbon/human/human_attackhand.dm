@@ -159,7 +159,7 @@
 
 			if(src.grabbed_by.len || src.buckled || !src.canmove || src==H || H.species.flags & NO_BLOCK)
 				accurate = 1 // certain circumstances make it impossible for us to evade punches
-				rand_damage = 5
+				rand_damage = 3
 
 			// Process evasion and blocking
 			var/miss_type = 0
@@ -222,11 +222,15 @@
 			if(HULK in H.mutations)
 				real_damage *= 2 // Hulks do twice the damage
 				rand_damage *= 2
-			real_damage = max(1, real_damage)
+			real_damage = (max(1, real_damage) * strToDamageModifier(H.str))
 
 			var/armour = run_armor_check(hit_zone, "melee")
 			// Apply additional unarmed effects.
 			attack.apply_effects(H, src, armour, rand_damage, hit_zone)
+
+			// Nerf attacks done while lying by 1/3rd
+			if (H.lying)
+				real_damage = max(real_damage * 0.66, 1)
 
 			// Finally, apply damage to target
 			apply_damage(real_damage, (attack.deal_halloss ? PAIN : BRUTE), hit_zone, armour, damage_flags=attack.damage_flags())
