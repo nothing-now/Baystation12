@@ -10,11 +10,11 @@
 	var/citizenship = "None"            //Current home system.
 	var/faction = "None"                //Antag faction/general associated faction.
 	var/religion = "None"               //Religious association.
-
+/*
 /datum/category_item/player_setup_item/general/background
-	name = "Background"
+	name = "Religion"
 	sort_order = 5
-
+*/
 /datum/category_item/player_setup_item/general/background/load_character(var/savefile/S)
 	from_file(S["med_record"],pref.med_record)
 	from_file(S["sec_record"],pref.sec_record)
