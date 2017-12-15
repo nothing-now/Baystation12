@@ -18,15 +18,16 @@
  */
 /obj/item/weapon/material/twohanded
 	w_class = ITEM_SIZE_HUGE
-	var/wielded = 0
-	var/force_wielded = 0
-	var/force_unwielded
-	var/wieldsound = null
-	var/unwieldsound = null
+//	var/wielded = 0
+//	var/force_wielded = 0
+//	var/force_unwielded
+//	var/wieldsound = null
+//	var/unwieldsound = null
 	var/base_icon
 	var/base_name
 	var/unwielded_force_divisor = 0.25
 
+/*
 /obj/item/weapon/material/twohanded/update_twohanding()
 	var/mob/living/M = loc
 	if(istype(M) && M.can_wield_item(src) && is_held_twohanded(M))
@@ -37,7 +38,7 @@
 		force = force_unwielded
 	update_icon()
 	..()
-
+*/
 /obj/item/weapon/material/twohanded/update_force()
 	base_name = name
 	if(sharp || edge)

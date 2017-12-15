@@ -555,11 +555,11 @@
 				return
 			if("general")
 				var/msg = sanitize(input(usr,"Update the general description of your character. This will be shown regardless of clothing, and may include OOC notes and preferences.","Flavor Text",html_decode(flavor_texts[href_list["flavor_change"]])) as message, extra = 0)
-				flavor_texts[href_list["flavor_change"]] = post_edit_cp1251(sanitize(msg, extra = 0))
+				flavor_texts[href_list["flavor_change"]] = sanitize(msg, extra = 0)
 				return
 			else
 				var/msg = sanitize(input(usr,"Update the flavor text for your [href_list["flavor_change"]].","Flavor Text",html_decode(flavor_texts[href_list["flavor_change"]])) as message, extra = 0)
-				flavor_texts[href_list["flavor_change"]] = post_edit_cp1251(sanitize(msg, extra = 0))
+				flavor_texts[href_list["flavor_change"]] = sanitize(msg, extra = 0)
 			//	set_flavor()
 				return
 	//Crafting

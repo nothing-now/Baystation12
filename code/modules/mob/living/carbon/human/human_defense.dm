@@ -257,7 +257,7 @@ meteor_act
 			src.visible_message("<span class='danger'>[user] slices [src]'s throat!</span>")
 		else
 			src.visible_message("<span class='danger'>[user] slices open [src]'s [affecting.artery_name] artery!</span>")
-	
+
 	//Next tendon, which disables the limb, but does not remove it, making it easier to fix, and less lethal, than losing it.
 	else if(I.sharp && (I.sharpness * 2) && !(affecting.status & ORGAN_TENDON_CUT) && affecting.has_tendon)//Yes this is the same exactly probability again. But I'm running it seperate because I don't want the two to be exclusive.
 		affecting.sever_tendon()
@@ -642,7 +642,7 @@ meteor_act
 		if(1)//They drop their weapon.
 			visible_message("<span class='danger'><big>CRITICAL FAILURE! \The [I] flies out of [src]'s hand!</big></span>")
 			drop_from_inventory(I)
-			throw_at(get_edge_target_turf(I, pick(alldirs)), rand(1,3), throw_speed)//Throw that sheesh away
+			throw_at(get_edge_target_turf(I, pick(GLOB.alldirs)), rand(1,3), throw_speed)//Throw that sheesh away
 			return
 		if(2)
 			visible_message("<span class='danger'><big>CRITICAL FAILURE! [src] botches the attack, stumbles, and falls!</big></span>")

@@ -124,7 +124,7 @@
 
 
 /obj/item/proc/unwield(mob/user)
-	if(!wielded || !user) 
+	if(!wielded || !user)
 		return
 	wielded = 0
 	if(force_unwielded)
@@ -141,7 +141,7 @@
 	if(user)
 		user.update_inv_r_hand()
 		user.update_inv_l_hand()
-	
+
 	user.visible_message("<span class='warning'>[user] let's go of their other hand.")
 	if(unwieldsound)
 		playsound(loc, unwieldsound, 50, 1)
@@ -228,8 +228,8 @@
 	name = "offhand"
 	icon_state = "offhand"
 	w_class = ITEM_SIZE_NO_CONTAINER
-	flags = ABSTRACT | NOBLOODY
-	//resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | UNACIDABLE | ACID_PROOF
+	flags = NOBLOODY//ABSTRACT | NOBLOODY
+
 /*
 /obj/item/weapon/twohanded/offhand/Destroy()
 	var/obj/item/I = user.get_active_hand()

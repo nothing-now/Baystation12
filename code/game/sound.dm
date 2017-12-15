@@ -65,6 +65,7 @@ var/list/bullet_hit_wall = list('sound/weapons/guns/misc/ric1.ogg', 'sound/weapo
 var/list/stab_sound = list('sound/weapons/stab1.ogg', 'sound/weapons/stab2.ogg', 'sound/weapons/stab3.ogg')
 var/list/slash_sound = list('sound/weapons/slash1.ogg','sound/weapons/slash2.ogg','sound/weapons/slash3.ogg')
 var/list/blunt_swing = list('sound/weapons/blunt_swing1.ogg','sound/weapons/blunt_swing2.ogg','sound/weapons/blunt_swing3.ogg')
+var/list/swing_sound = list('sound/weapons/swing_01.ogg', 'sound/weapons/swing_02.ogg', 'sound/weapons/swing_03.ogg')
 
 
 

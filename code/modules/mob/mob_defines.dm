@@ -120,7 +120,7 @@
 	var/obj/item/clothing/mask/wear_mask = null//Carbon
 
 
-	var/datum/hud/hud_used = null
+//	var/datum/hud/hud_used = null
 
 	var/list/grabbed_by = list(  )
 
@@ -183,7 +183,7 @@
 	var/memory = ""
 	var/flavor_text = ""
 
-	var/nabbing = 0  // Whether a creature with a CAN_NAB tag is grabbing normally or in nab mode.	
+	var/nabbing = 0  // Whether a creature with a CAN_NAB tag is grabbing normally or in nab mode.
 
 	var/has_limbs = 1//For crawling
 

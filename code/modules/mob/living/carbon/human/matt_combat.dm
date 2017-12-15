@@ -31,7 +31,7 @@
 
 /mob/living/proc/attempt_dodge()//Handle parry is an object proc and it's, its own thing.
 	if(combat_mode && (defense_intent == I_DODGE) && !lying)//Todo, make use of the check_shield_arc proc to make sure you can't dodge from behind.
-		if(staminaloss < 50 && statscheck(dex, 20))//You gotta be the master of dexterity to dodge every time. 
+		if(staminaloss < 50 && statscheck(dex, 20))//You gotta be the master of dexterity to dodge every time.
 			do_dodge()
 			return	1
 		else if(staminaloss >= 50 && prob(10))
@@ -39,7 +39,7 @@
 			return	1
 
 /mob/living/proc/do_dodge()
-	var/lol = pick(cardinal)//get a direction.
+	var/lol = pick(GLOB.cardinal)//get a direction.
 	adjustStaminaLoss(15)//add some stamina loss
 	playsound(loc, 'sound/weapons/punchmiss.ogg', 80, 1)//play a sound
 	step(src,lol)//move them
@@ -61,7 +61,7 @@
 			resting = 0
 			rest.icon_state = "rest0"
 		return
-		
+
 	else
 		resting = 1
 		rest.icon_state = "rest1"

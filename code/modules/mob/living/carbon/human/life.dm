@@ -588,8 +588,6 @@
 
 		handle_hygiene()
 
-		handle_lust()
-
 
 		if(get_shock() >= species.total_health)
 			if(!stat)
@@ -726,6 +724,17 @@
 			if (chem_effects[CE_PAINKILLER] > 100)
 				healths.overlays.Cut()
 				healths.icon_state = "health_numb"
+			
+			else if(using_alt_hud)//If we're using Lunahud we want the lunahud health face.
+				var/mhealth = (getBruteLoss() + getFireLoss())
+				switch(mhealth)
+					if(100 to INFINITY)		healths.icon_state = "health6"
+					if(80 to 100)			healths.icon_state = "health5"
+					if(60 to 80)			healths.icon_state = "health4"
+					//if(60 to 80)			healths.icon_state = "health3"
+					if(40 to 60)			healths.icon_state = "health2"
+					if(20 to 40)			healths.icon_state = "health1"
+					if(0 to 20)				healths.icon_state = "health0"
 			else
 				// Generate a by-limb health display.
 				healths.icon_state = "blank"

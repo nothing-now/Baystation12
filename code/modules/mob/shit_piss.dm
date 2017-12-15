@@ -112,32 +112,11 @@
 		desc = "That's a dried crusty urine stain. Fucking janitors."
 
 
-
-/obj/effect/decal/cleanable/cum
-	name = "cum"
-	desc = "It's pie cream from a cream pie. Or not..."
-	density = 0
-	layer = 2
-	icon = 'honk/icons/effects/cum.dmi'
-	blood_DNA = list()
-	anchored = 1
-	random_icon_states = list("cum1", "cum3", "cum4", "cum5", "cum6", "cum7", "cum8", "cum9", "cum10", "cum11", "cum12")
-
-
-/obj/effect/decal/cleanable/cum/New()
-	..()
-	icon_state = pick(random_icon_states)
-	for(var/obj/effect/decal/cleanable/cum/jizz in src.loc)
-		if(jizz != src)
-			qdel(jizz)
-
-
 //#####REAGENTS#####
 
 //SHIT
 /datum/reagent/poo
 	name = "poo"
-	id = "poo"
 	description = "It's poo."
 	reagent_state = LIQUID
 	color = "#643200"
@@ -149,7 +128,7 @@
 		M = holder.my_atom
 
 	M.adjustToxLoss(1)
-	holder.remove_reagent(src.id, 0.2)
+	holder.remove_reagent(src, 0.2)
 	..()
 	return
 
@@ -178,7 +157,6 @@
 //URINE
 /datum/reagent/urine
 	name = "urine"
-	id = "urine"
 	description = "It's pee."
 	reagent_state = LIQUID
 	color = COLOR_YELLOW
@@ -189,19 +167,6 @@
 	if(!istype(T, /turf/space))
 		new /obj/effect/decal/cleanable/urine(T)
 
-//SEMEN
-/datum/reagent/semen
-	name = "semen"
-	id = "semen"
-	description = "It's semen."
-	reagent_state = LIQUID
-	color = COLOR_WHITE
-	taste_description = "salt"
-
-/datum/reagent/semen/touch_turf(var/turf/T)
-	src = null
-	if(!istype(T, /turf/space))
-		new /obj/effect/decal/cleanable/cum(T)
 
 /obj/item/weapon/reagent_containers/food/snacks/poo
 	name = "poo"
@@ -223,7 +188,7 @@
 	var/turf/T = src.loc
 	if(!istype(T, /turf/space))
 		new /obj/effect/decal/cleanable/poo(T)
-	//qdel(src) THIS IS BAD AND YOU SHOULD FEEL BAD.
+	qdel(src)// THIS IS BAD AND YOU SHOULD FEEL BAD.
 	..()
 
 //#####BOTTLES#####
@@ -306,21 +271,9 @@
 
 		//Poo in the loo.
 		var/obj/structure/toilet/T = locate() in src.loc
-		var/obj/machinery/disposal/toilet/T2 = locate() in src.loc
 		var/mob/living/M = locate() in src.loc
 		if(T && T.open)
 			message = "<B>[src]</B> defecates into \the [T]."
-
-		else if (T2 && T2.open)
-			message = "<B>[src]</B> defecates into \the [T2]."
-			var/obj/item/weapon/reagent_containers/food/snacks/poo/V = new/obj/item/weapon/reagent_containers/food/snacks/poo(src.loc)
-			if(reagents)
-				reagents.trans_to(V, rand(1,5))
-
-			if(T2.CanInsertItem(src)) //attempt to insert the shit into the toilet.
-				V.forceMove(T2)
-			else
-				shit_left++
 
 		else if(w_uniform)
 			message = "<B>[src]</B> shits \his pants."
@@ -340,8 +293,6 @@
 			if(reagents)
 				reagents.trans_to(V, rand(1,5))
 
-			shit_left++//Global var for round end, not how much piss is left.
-
 		playsound(src.loc, 'sound/effects/poo2.ogg', 60, 1)
 		bowels -= rand(60,80)
 
@@ -359,15 +310,15 @@
 		return
 
 	var/obj/structure/urinal/U = locate() in src.loc
-	var/obj/machinery/disposal/toilet/T = locate() in src.loc
-	var/obj/machinery/disposal/toilet/T2 = locate() in src.loc
+	var/obj/structure/toilet/T = locate() in src.loc
+	//var/obj/structure/toilet/T2 = locate() in src.loc
 	var/obj/structure/sink/S = locate() in src.loc
 	var/obj/item/weapon/reagent_containers/RC = locate() in src.loc
 	if((U || S) && gender != FEMALE)//In the urinal or sink.
 		message = "<B>[src]</B> urinates into [U ? U : S]."
 		reagents.remove_any(rand(1,8))
 
-	else if( (T && T.open) || (T2 && T2.open) )//In the toilet.
+	else if(T && T.open)//In the toilet.
 		message = "<B>[src]</B> urinates into [T]."
 		reagents.remove_any(rand(1,8))
 
@@ -391,7 +342,6 @@
 		if(reagents)
 			reagents.trans_to(D, rand(1,8))
 		message = "<B>[src]</B> pisses on the [TT.name]."
-		piss_left++//Global var for round end, not how much piss is left.
 
 	bladder -= 50
 	visible_message("[message]")

@@ -11,8 +11,8 @@
 			if(H.isMonkey())
 				screamsound = "sound/voice/monkey_pain[rand(1,3)].ogg"
 
-			else if(H.isChild())
-				screamsound = "sound/voice/child_pain[rand(1,2)].ogg"
+			//else if(H.isChild())
+			//	screamsound = "sound/voice/child_pain[rand(1,2)].ogg"
 
 			else if(src.gender == MALE)
 				screamsound = "sound/voice/man_pain[rand(1,3)].ogg"
@@ -66,8 +66,8 @@
 			if(H.isMonkey())
 				return
 
-			if(H.isChild())
-				moansound = 'sound/voice/child_moan1.ogg'
+			//if(H.isChild())
+			//	moansound = 'sound/voice/child_moan1.ogg'
 
 			else if(src.gender == MALE)
 				moansound = "sound/voice/male_moan[rand(1,3)].ogg"
