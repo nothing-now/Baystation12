@@ -145,6 +145,7 @@ CIGARETTE PACKETS ARE IN FANCY.DM
 		src.lit = 1
 		damtype = "fire"
 		if(reagents.get_reagent_amount(/datum/reagent/toxin/phoron)) // the phoron explodes when exposed to fire
+		playsound(src, 'sound/items/cig_light.ogg', 75, 1, -1)//Play the nice sound.
 			var/datum/effect/effect/system/reagents_explosion/e = new()
 			e.set_up(round(reagents.get_reagent_amount(/datum/reagent/toxin/phoron) / 2.5, 1), get_turf(src), 0, 0)
 			e.start()
@@ -165,6 +166,7 @@ CIGARETTE PACKETS ARE IN FANCY.DM
 		START_PROCESSING(SSobj, src)
 
 /obj/item/clothing/mask/smokable/proc/die(var/nomessage = 0)
+	playsound(src, 'sound/items/cig_snuff.ogg', 25, 1)
 	set_light(0)
 	lit = 0
 	STOP_PROCESSING(SSobj, src)
@@ -306,7 +308,8 @@ CIGARETTE PACKETS ARE IN FANCY.DM
 		if(blocked)
 			to_chat(H, "<span class='warning'>\The [blocked] is in the way!</span>")
 			return 1
-		to_chat(H, "<span class='notice'>You take a drag on your [name].</span>")
+		H.visible_message("<span class='notice'>[H.name] takes a drag of their [name].</span>")
+		playsound(H, 'sound/effects/inhale.ogg', 50, 0, -1)
 		smoke(5)
 		return 1
 	return ..()
