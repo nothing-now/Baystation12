@@ -3,6 +3,7 @@
 #define FOOTSTEP_PLATING 	"plating"
 #define FOOTSTEP_WOOD 		"wood"
 #define FOOTSTEP_ASTEROID 	"asteroid"
+#define FOOSTEP_DIRT		"dirt"
 
 /turf/simulated/floor/var/global/list/footstep_sounds = list(
 	FOOTSTEP_WOOD = list(
@@ -34,7 +35,12 @@
 		'sound/effects/footstep/asteroid2.ogg',
 		'sound/effects/footstep/asteroid3.ogg',
 		'sound/effects/footstep/asteroid4.ogg',
-		'sound/effects/footstep/asteroid5.ogg')
+		'sound/effects/footstep/asteroid5.ogg'),
+	FOOSTEP_DIRT = list(
+		'sound/effects/footstep/dirt1.ogg',
+		'sound/effects/footstep/dirt2.ogg',
+		'sound/effects/footstep/dirt3.ogg')
+
 	)
 
 /decl/flooring/var/footstep_type
@@ -52,6 +58,10 @@
 
 /turf/simulated/floor/asteroid/get_footstep_sound()
 	return safepick(footstep_sounds[FOOTSTEP_ASTEROID])
+
+/turf/simulated/floor/dirty/get_footstep_sound()
+	return safepick(footstep_sounds[FOOSTEP_DIRT])
+
 
 /turf/simulated/floor/Entered(var/mob/living/carbon/human/H)
 	..()

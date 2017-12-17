@@ -222,6 +222,16 @@
 	icon_state = pick("snow[rand(1,12)]","snow0")
 	..()
 
+/turf/simulated/floor/dirty
+	name = "dirt"
+	icon = 'icons/turf/dirt.dmi'
+	icon_state = "dirt1"
+
+/turf/simulated/floor/dirty/New()
+	dir = pick(GLOB.alldirs)
+	..()
+
+
 /turf/simulated/floor/light
 /turf/simulated/floor/airless/ceiling
 
