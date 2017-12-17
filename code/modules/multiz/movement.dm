@@ -198,13 +198,22 @@
 	if(species && species.handle_fall_special(src, landing))
 		return
 
-	..()
-	var/damage = 10
-	apply_damage(rand(0, damage), BRUTE, BP_HEAD)
-	apply_damage(rand(0, damage), BRUTE, BP_CHEST)
-	apply_damage(rand(0, damage), BRUTE, BP_L_LEG)
-	apply_damage(rand(0, damage), BRUTE, BP_R_LEG)
-	apply_damage(rand(0, damage), BRUTE, BP_L_ARM)
-	apply_damage(rand(0, damage), BRUTE, BP_R_ARM)
-	weakened = max(weakened,2)
-	updatehealth()
+	if(..())
+		return
+
+	if(!istype(landing, /turf/simulated/open))
+		if(statscheck(dex, 25, 0, src) && !lying)
+			to_chat(src, "<span class = 'notice'>You land softly.</span>")
+			return
+
+		playsound(src.loc, 'sound/effects/gore/fallsmash.ogg', 75, 1)//Splat
+		var/damage = 20
+		apply_damage(rand(0, damage), BRUTE, BP_HEAD)
+		apply_damage(rand(0, damage), BRUTE, BP_CHEST)
+		apply_damage(rand(0, damage), BRUTE, BP_L_LEG)
+		apply_damage(rand(0, damage), BRUTE, BP_R_LEG)
+		apply_damage(rand(0, damage), BRUTE, BP_L_ARM)
+		apply_damage(rand(0, damage), BRUTE, BP_R_ARM)
+		Stun(1)
+		Weaken(1)
+		updatehealth()
