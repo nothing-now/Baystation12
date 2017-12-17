@@ -231,6 +231,9 @@
 	dir = pick(GLOB.alldirs)
 	..()
 
+/turf/simulated/floor/dirty/update_dirt()
+	return	// Dirt doesn't doesn't become dirty
+
 
 /turf/simulated/floor/light
 /turf/simulated/floor/airless/ceiling
