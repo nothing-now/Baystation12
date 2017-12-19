@@ -55,8 +55,9 @@ datum/controller/vote
 		log_debug("The server has called a crew transfer vote")
 
 	proc/autogamemode()
-		initiate_vote("gamemode","the server", 1)
-		log_debug("The server has called a gamemode vote")
+		return
+		//initiate_vote("gamemode","the server", 1)
+		//log_debug("The server has called a gamemode vote")
 
 	proc/automap()
 		initiate_vote("map","the server", 1)

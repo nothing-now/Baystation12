@@ -107,6 +107,7 @@
 		var/obj/item/organ/internal/lungs/L = internal_organs_by_name[species_organ]
 		if(L)
 			active_breaths = L.active_breathing
+		handle_gas_mask_sound()
 		..(active_breaths)
 
 // Calculate how vulnerable the human is to under- and overpressure.
