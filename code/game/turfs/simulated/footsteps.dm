@@ -61,7 +61,8 @@
 
 /turf/simulated/floor/dirty/get_footstep_sound()
 	return safepick(footstep_sounds[FOOSTEP_DIRT])
-
+/turf/simulated/floor/exoplanet/snow/get_footstep_sound()
+	return safepick(footstep_sounds[FOOTSTEP_CARPET])
 
 /turf/simulated/floor/Entered(var/mob/living/carbon/human/H)
 	..()
