@@ -380,6 +380,10 @@
 
 		moving = 0
 
+		if(mob.pulling)
+			mob.dir = turn(mob.dir, 180)
+			mob.update_vision_cone()
+
 		return .
 
 	return
