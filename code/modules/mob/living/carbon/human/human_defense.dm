@@ -143,7 +143,7 @@ meteor_act
 	return 0
 
 //Used to check if they can be fed food/drinks/pills
-/mob/living/carbon/human/proc/check_mouth_coverage()
+/mob/living/carbon/human/check_mouth_coverage()
 	var/list/protective_gear = list(head, wear_mask, wear_suit, w_uniform)
 	for(var/obj/item/gear in protective_gear)
 		if(istype(gear) && (gear.body_parts_covered & FACE) && !(gear.item_flags & FLEXIBLEMATERIAL))
@@ -289,8 +289,8 @@ meteor_act
 					apply_effect(6, WEAKEN, blocked)
 		//Apply blood
 		attack_bloody(I, user, effective_force, hit_zone)
-	if(user.skillcheck(user.melee_skill,0,0) == CRIT_SUCCESS)
-		resolve_critical_hit()
+	//if(user.skillcheck(user.melee_skill,0,0) == CRIT_SUCCESS)
+	//	resolve_critical_hit()
 
 	return 1
 

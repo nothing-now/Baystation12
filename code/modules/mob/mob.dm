@@ -701,6 +701,7 @@
 	else
 		lying = incapacitated(INCAPACITATION_KNOCKDOWN)
 		canmove = !incapacitated(INCAPACITATION_DISABLED)
+		//playsound(src, "pratfall", 50)
 
 	if(lying)
 		set_density(0)

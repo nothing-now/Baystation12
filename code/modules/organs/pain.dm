@@ -13,7 +13,7 @@ mob/var/next_pain_time = 0
 // message is the custom message to be displayed
 // power decides how much painkillers will stop the message
 // force means it ignores anti-spam timer
-mob/living/carbon/proc/custom_pain(var/message, var/power, var/force, var/obj/item/organ/external/affecting, var/nohalloss, var/flash_pain)
+/mob/living/carbon/proc/custom_pain(var/message, var/power, var/force, var/obj/item/organ/external/affecting, var/nohalloss, var/flash_pain)
 	if(stat || !can_feel_pain() || chem_effects[CE_PAINKILLER] > power)//!message
 		return 0
 
@@ -38,6 +38,10 @@ mob/living/carbon/proc/custom_pain(var/message, var/power, var/force, var/obj/it
 					flash_pain()
 					if(stuttering < 10)
 						stuttering += 10
+					if(prob(2))
+						Stun(5)//makes you drop what you're holding.
+						shake_camera(src, 20, 3)
+						agony_scream()
 		else
 			adjustHalLoss(ceil(power/2))
 
@@ -50,7 +54,7 @@ mob/living/carbon/proc/custom_pain(var/message, var/power, var/force, var/obj/it
 			to_chat(src, "<b>[message]</b>")
 	next_pain_time = world.time + (100-power)
 
-mob/living/carbon/human/proc/handle_pain()
+/mob/living/carbon/human/proc/handle_pain()
 	if(stat)
 		return
 	if(!can_feel_pain())
@@ -70,8 +74,8 @@ mob/living/carbon/human/proc/handle_pain()
 	if(damaged_organ && chem_effects[CE_PAINKILLER] < maxdam)
 		if(maxdam > 10 && paralysis)
 			paralysis = max(0, paralysis - round(maxdam/10))
-		if(maxdam > 50 && prob(maxdam / 5))
-			drop_item()
+		//if(maxdam > 50 && prob(maxdam / 5))
+		//	drop_item()
 		//var/burning = damaged_organ.burn_dam > damaged_organ.brute_dam
 		var/msg
 		//switch(maxdam)
