@@ -89,7 +89,7 @@ GLOBAL_LIST_INIT(chop_sound,list('sound/weapons/chop1.ogg','sound/weapons/chop2.
 				M.playsound_local(turf_source, soundin, vol, vary, frequency, falloff, is_global, extrarange)
 			var/z_dist = abs(T.z - turf_source.z)//Playing sound on a z-level above or below you.
 			if(T && z_dist <= 1 && (!is_ambiance || M.get_preference_value(/datum/client_preference/play_ambiance) == GLOB.PREF_YES))
-				M.playsound_local(turf_source, soundin, vol/(1+z_dist), vary, frequency, falloff, is_global, extrarange, AUDITORIUM)
+				M.playsound_local(turf_source, soundin, vol/(1+z_dist), vary, frequency, falloff, is_global, extrarange, UNDERWATER)
 
 
 var/const/FALLOFF_SOUNDS = 0.5
