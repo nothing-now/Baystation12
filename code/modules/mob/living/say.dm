@@ -308,6 +308,7 @@ proc/get_radio_key_from_channel(var/channel)
 
 	if(whispering)
 		log_whisper("[name]/[key] : [message]")
+	/*
 	else
 		var/list/temp_message = splittext(message, " ") //List each word in the message. We use this for determining speech words and stupid honk disease stuff.
 		var/speechwords = min(round(temp_message.len), 5)
@@ -317,6 +318,7 @@ proc/get_radio_key_from_channel(var/channel)
 		else
 			playsound(src, "sound/voice/speech/[gender][speechwords].ogg", 75)
 		log_say("[name]/[key] : [message]")
+	*/
 	return 1
 
 /mob/living/proc/say_signlang(var/message, var/verb="gestures", var/datum/language/language)
