@@ -14,7 +14,7 @@
 	var/equipsound = null
 	var/slot_flags = 0		//This is used to determine on which slots an item can fit.
 	var/no_attack_log = 0			//If it's an item we don't want to log attack_logs with, set this to 1
-	pass_flags = PASSTABLE
+	pass_flags = PASS_FLAG_TABLE
 //	causeerrorheresoifixthis
 	var/obj/item/master = null
 	var/list/origin_tech = null	//Used by R&D to determine what research bonuses it grants.
@@ -228,7 +228,7 @@
 	name = "offhand"
 	icon_state = "offhand"
 	w_class = ITEM_SIZE_NO_CONTAINER
-	flags = NOBLOODY//ABSTRACT | NOBLOODY
+	obj_flags = ATOM_FLAG_NO_BLOOD//ABSTRACT | NOBLOODY
 
 /*
 /obj/item/weapon/twohanded/offhand/Destroy()

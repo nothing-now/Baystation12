@@ -7,8 +7,6 @@
  * /obj/item/rig_module/device/rcd
  * /obj/item/rig_module/device/anomaly_scanner
  * /obj/item/rig_module/maneuvering_jets
- * /obj/item/rig_module/foam_sprayer
- * /obj/item/rig_module/device/broadcaster
  * /obj/item/rig_module/chem_dispenser
  * /obj/item/rig_module/chem_dispenser/injector
  * /obj/item/rig_module/voice
@@ -38,7 +36,7 @@
 	suit_overlay_inactive = "plasmacutter"
 	use_power_cost = 50
 	origin_tech = list(TECH_MATERIAL = 4, TECH_PHORON = 3, TECH_ENGINEERING = 6)
-	device_type = /obj/item/weapon/pickaxe/plasmacutter
+	device_type = /obj/item/weapon/gun/energy/plasmacutter
 
 /obj/item/rig_module/device/healthscanner
 	name = "health scanner module"
@@ -96,7 +94,7 @@
 	interface_desc = "A device for building or removing walls. Cell-powered."
 	usable = 1
 	engage_string = "Configure RCD"
-	use_power_cost = 100 KILOWATTS // Matter fabrication is a very energy-demanding process.
+	use_power_cost = 300
 	origin_tech = list(TECH_MATERIAL = 6, TECH_MAGNET = 5, TECH_ENGINEERING = 7)
 	device_type = /obj/item/weapon/rcd/mounted
 
@@ -389,8 +387,6 @@
 	..()
 	jets.holder = null
 	jets.ion_trail.set_up(jets)
-
-/obj/item/rig_module/foam_sprayer
 
 /obj/item/rig_module/device/paperdispenser
 	name = "hardsuit paper dispenser"

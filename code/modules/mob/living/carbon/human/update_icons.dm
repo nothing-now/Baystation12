@@ -183,6 +183,9 @@ Please contact me on #coderbus IRC. ~Carn x
 			if(species.has_floating_eyes)
 				overlays |= species.get_eyes(src)
 
+	if(auras)
+		overlays |= auras
+
 	var/matrix/M = matrix()
 	if(lying && !species.prone_icon) //Only rotate them if we're not drawing a specific icon for being prone.
 		M.Turn(90)
@@ -355,11 +358,11 @@ var/global/list/damage_icon_parts = list()
 	//END CACHED ICON GENERATION.
 	stand_icon.Blend(base_icon,ICON_OVERLAY)
 
-	if(update_icons)
-		update_icons()
-
 	//tail
 	update_tail_showing(0)
+
+	if(update_icons)
+		update_icons()
 
 //UNDERWEAR OVERLAY
 

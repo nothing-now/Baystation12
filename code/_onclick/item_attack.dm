@@ -25,7 +25,7 @@ avoid code duplication. This includes items that may sometimes act as a standard
 
 //I would prefer to rename this to attack(), but that would involve touching hundreds of files.
 /obj/item/proc/resolve_attackby(atom/A, mob/user, var/click_params)
-	if(!(flags & NOPRINT))
+	if(!(item_flags & ITEM_FLAG_NO_PRINT))
 		add_fingerprint(user)
 	return A.attackby(src, user, click_params)
 
@@ -34,7 +34,7 @@ avoid code duplication. This includes items that may sometimes act as a standard
 	return
 
 /atom/movable/attackby(obj/item/W, mob/user)
-	if(!(W.flags & NOBLUDGEON))
+	if(!(W.item_flags & ITEM_FLAG_NO_BLUDGEON))
 		visible_message("<span class='danger'>[src] has been hit by [user] with [W].</span>")
 
 /mob/living/attackby(obj/item/I, mob/user)
@@ -61,17 +61,9 @@ avoid code duplication. This includes items that may sometimes act as a standard
 
 //I would prefer to rename this attack_as_weapon(), but that would involve touching hundreds of files.
 /obj/item/proc/attack(mob/living/M, mob/living/user, var/target_zone)
-	if(!force || (flags & NOBLUDGEON))
+	if(!force || (item_flags & ITEM_FLAG_NO_BLUDGEON))
 		return 0
 	if(M == user && user.a_intent != I_HURT)
-		return 0
-
-	if(user.staminaloss >= STAMINA_EXHAUST)//Can't attack people if you're out of stamina.
-		return 0
-
-	if(world.time <= next_attack_time)
-		if(world.time % 3) //to prevent spam
-			to_chat(user, "<span class='warning'>The [src] is not ready to attack again!</span>")
 		return 0
 
 	/////////////////////////
@@ -81,24 +73,20 @@ avoid code duplication. This includes items that may sometimes act as a standard
 	/////////////////////////
 
 	user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
-	//user.do_attack_animation(M)
+	user.do_attack_animation(M)
+	if(!user.aura_check(AURA_TYPE_WEAPON, src, user))
+		return 0
 
-	if(force)
-		user.adjustStaminaLoss(w_class + 3)
-	if(swing_sound)
-		playsound(M, swing_sound, 50, 1, -1)
 	var/hit_zone = M.resolve_item_attack(src, user, target_zone)
 	if(hit_zone)
 		apply_hit_effect(M, user, hit_zone)
-
-	next_attack_time = world.time + (weapon_speed_delay)//by default, that's 25 - 10. Which is 15. Which should be what the average attack is. People who are weaker will swing heavy objects slower.
 
 	return 1
 
 //Called when a weapon is used to make a successful melee attack on a mob. Returns the blocked result
 /obj/item/proc/apply_hit_effect(mob/living/target, mob/living/user, var/hit_zone)
 	if(hitsound)
-		playsound(target, hitsound, 50, 1, -1)
+		playsound(loc, hitsound, 50, 1, -1)
 
 	var/power = force
 	if(HULK in user.mutations)

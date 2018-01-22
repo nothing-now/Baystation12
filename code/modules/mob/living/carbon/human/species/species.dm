@@ -75,7 +75,7 @@
 	var/radiation_mod =  1                    // Radiation modifier
 	var/flash_mod =      1                    // Stun from blindness modifier.
 	var/metabolism_mod = 1                    // Reagent metabolism modifier
-	var/vision_flags = DEFAULT_SIGHT               // Same flags as glasses.
+	var/vision_flags = SEE_SELF               // Same flags as glasses.
 
 	// Death vars.
 	var/meat_type = /obj/item/weapon/reagent_containers/food/snacks/meat/human
@@ -134,7 +134,7 @@
 	var/has_fine_manipulation = 1 // Can use small items.
 	var/siemens_coefficient = 1   // The lower, the thicker the skin and better the insulation.
 	var/darksight = 2             // Native darksight distance.
-	var/flags = 0                 // Various specific features.
+	var/species_flags = 0         // Various specific features.
 	var/appearance_flags = 0      // Appearance/display related features.
 	var/spawn_flags = 0           // Flags that specify who can spawn as this species
 	var/slowdown = 0              // Passive movement speed malus (or boost, if negative)
@@ -481,7 +481,7 @@ The slots that you can use are found in items_clothing.dm and are the inventory 
 				return W.afterattack(shoot_to,target)
 
 	var/randn = rand(1, 100)
-	if(!(flags & NO_SLIP) && randn <= 25)
+	if(!(species_flags & SPECIES_FLAG_NO_SLIP) && randn <= 25)
 		var/armor_check = target.run_armor_check(affecting, "melee")
 		target.apply_effect(3, WEAKEN, armor_check)
 		playsound(target.loc, 'sound/weapons/thudswoosh.ogg', 50, 1, -1)

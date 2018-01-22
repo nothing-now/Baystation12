@@ -37,7 +37,6 @@
 	var/fire_alert = 0
 	var/pressure_alert = 0
 	var/temperature_alert = 0
-	var/in_stasis = 0
 	var/heartbeat = 0
 
 /mob/living/carbon/human/Life()
@@ -65,7 +64,7 @@
 	voice = GetVoice()
 
 	//No need to update all of these procs if the guy is dead.
-	if(stat != DEAD && !in_stasis)
+	if(stat != DEAD && !InStasis())
 		//Updates the number of stored chemicals for powers
 		handle_changeling()
 
@@ -102,12 +101,11 @@
 /mob/living/carbon/human/breathe()
 	var/species_organ = species.breathing_organ
 
-	if(!in_stasis && species_organ)
+	if(species_organ)
 		var/active_breaths = 0
 		var/obj/item/organ/internal/lungs/L = internal_organs_by_name[species_organ]
 		if(L)
 			active_breaths = L.active_breathing
-		handle_gas_mask_sound()
 		..(active_breaths)
 
 // Calculate how vulnerable the human is to under- and overpressure.
@@ -117,7 +115,7 @@
 
 	var/pressure_adjustment_coefficient = 1 // Assume no protection at first.
 
-	if(wear_suit && (wear_suit.item_flags & STOPPRESSUREDAMAGE) && head && (head.item_flags & STOPPRESSUREDAMAGE)) // Complete set of pressure-proof suit worn, assume fully sealed.
+	if(wear_suit && (wear_suit.item_flags & ITEM_FLAG_STOPPRESSUREDAMAGE) && head && (head.item_flags & ITEM_FLAG_STOPPRESSUREDAMAGE)) // Complete set of pressure-proof suit worn, assume fully sealed.
 		pressure_adjustment_coefficient = 0
 
 		// Handles breaches in your space suit. 10 suit damage equals a 100% loss of pressure protection.
@@ -187,9 +185,6 @@
 				emote("cough")
 
 /mob/living/carbon/human/handle_mutations_and_radiation()
-	if(in_stasis)
-		return
-
 	if(getFireLoss())
 		if((COLD_RESISTANCE in mutations) || (prob(1)))
 			heal_organ_damage(0,1)
@@ -258,7 +253,6 @@
 					to_chat(src, "<span class='warning'>You feel strange!</span>")
 					adjustCloneLoss(5 * RADIATION_SPEED_COEFFICIENT)
 					emote("gasp")
-					gasp_sound()
 		if(radiation > 150)
 			damage = 8
 			radiation -= 4 * RADIATION_SPEED_COEFFICIENT
@@ -274,11 +268,11 @@
 	/** breathing **/
 
 /mob/living/carbon/human/handle_chemical_smoke(var/datum/gas_mixture/environment)
-	if(wear_mask && (wear_mask.item_flags & BLOCK_GAS_SMOKE_EFFECT))
+	if(wear_mask && (wear_mask.item_flags & ITEM_FLAG_BLOCK_GAS_SMOKE_EFFECT))
 		return
-	if(glasses && (glasses.item_flags & BLOCK_GAS_SMOKE_EFFECT))
+	if(glasses && (glasses.item_flags & ITEM_FLAG_BLOCK_GAS_SMOKE_EFFECT))
 		return
-	if(head && (head.item_flags & BLOCK_GAS_SMOKE_EFFECT))
+	if(head && (head.item_flags & ITEM_FLAG_BLOCK_GAS_SMOKE_EFFECT))
 		return
 	..()
 
@@ -299,7 +293,7 @@
 			if(!rig.offline && (rig.air_supply && internal == rig.air_supply))
 				rig_supply = rig.air_supply
 
-		if (!rig_supply && (!contents.Find(internal) || !((wear_mask && (wear_mask.item_flags & AIRTIGHT)) || (head && (head.item_flags & AIRTIGHT)))))
+		if (!rig_supply && (!contents.Find(internal) || !((wear_mask && (wear_mask.item_flags & ITEM_FLAG_AIRTIGHT)) || (head && (head.item_flags & ITEM_FLAG_AIRTIGHT)))))
 			internal = null
 
 		if(internal)
@@ -390,14 +384,16 @@
 		fire_alert = max(fire_alert, 1)
 		if(status_flags & GODMODE)	return 1	//godmode
 
-		if(!istype(loc, /obj/machinery/atmospherics/unary/cryo_cell))
-			var/burn_dam = 0
-			if(bodytemperature > getSpeciesOrSynthTemp(COLD_LEVEL_1))
-				burn_dam = COLD_DAMAGE_LEVEL_1
-			else if(bodytemperature > getSpeciesOrSynthTemp(COLD_LEVEL_3))
-				burn_dam = COLD_DAMAGE_LEVEL_2
-			else
-				burn_dam = COLD_DAMAGE_LEVEL_3
+		var/burn_dam = 0
+
+		if(bodytemperature > getSpeciesOrSynthTemp(COLD_LEVEL_2))
+			burn_dam = COLD_DAMAGE_LEVEL_1
+		else if(bodytemperature > getSpeciesOrSynthTemp(COLD_LEVEL_3))
+			burn_dam = COLD_DAMAGE_LEVEL_2
+		else
+			burn_dam = COLD_DAMAGE_LEVEL_3
+		SetStasis(getCryogenicFactor(bodytemperature), STASIS_COLD)
+		if(!chem_effects[CE_CRYO])
 			take_overall_damage(burn=burn_dam, used_weapon = "Low Body Temperature")
 			fire_alert = max(fire_alert, 1)
 
@@ -523,9 +519,6 @@
 	if(status_flags & GODMODE)
 		return 0
 
-	if(in_stasis)
-		return
-
 	if(isSynthetic())
 		return
 
@@ -568,8 +561,6 @@
 	if(stat == DEAD)	//DEAD. BROWN BREAD. SWIMMING WITH THE SPESS CARP
 		blinded = 1
 		silent = 0
-		handle_decay()
-
 	else				//ALIVE. LIGHTS ARE ON
 		updatehealth()	//TODO
 
@@ -581,19 +572,11 @@
 
 		if(hallucination_power)
 			handle_hallucinations()
-		handle_combat_mode()
-
-		handle_smelly_things()
-
-		handle_happiness()
-
-		handle_hygiene()
-
 
 		if(get_shock() >= species.total_health)
 			if(!stat)
-				//to_chat(src, "<span class='warning'>[species.halloss_message_self]</span>")
-				src.visible_message("<span class='warning'><B>[src]</B> gives into the pain!</span>")//("<B>[src]</B> [species.halloss_message].")
+				to_chat(src, "<span class='warning'>[species.halloss_message_self]</span>")
+				src.visible_message("<B>[src]</B> [species.halloss_message].")
 			Paralyse(10)
 
 		if(paralysis || sleeping)
@@ -601,7 +584,6 @@
 			set_stat(UNCONSCIOUS)
 			animate_tail_reset()
 			adjustHalLoss(-3)
-
 			if(sleeping)
 				handle_dreams()
 				if (mind)
@@ -612,7 +594,7 @@
 					if(!paralysis)
 						emote("snore")
 					else
-						agony_moan()//emote("groan")
+						emote("groan")
 			if(prob(2) && is_asystole() && isSynthetic())
 				visible_message(src, "<b>[src]</b> [pick("emits low pitched whirr","beeps urgently")]")
 		//CONSCIOUS
@@ -639,9 +621,10 @@
 		if (drowsyness > 0)
 			drowsyness = max(0, drowsyness-1)
 			eye_blurry = max(2, eye_blurry)
-			if (prob(5))
-				sleeping += 1
-				Paralyse(5)
+			if (drowsyness > 10 && (prob(5) || drowsyness >= 60))
+				if(stat == CONSCIOUS)
+					to_chat(src, "<span class='notice'>You are about to fall asleep...</span>")
+				Sleeping(5)
 
 		confused = max(0, confused - 1)
 
@@ -660,7 +643,11 @@
 		if (nutrition > 0)
 			nutrition = max (0, nutrition - species.hunger_factor)
 
-		CheckStamina()
+		if(stasis_value > 1 && drowsyness < stasis_value * 5)
+			drowsyness += min(stasis_value, 3)
+			if(!stat && prob(1))
+				to_chat(src, "<span class='notice'>You feel slow and sluggish...</span>")
+
 	return 1
 
 /mob/living/carbon/human/handle_regular_hud_updates()
@@ -725,17 +712,6 @@
 			if (chem_effects[CE_PAINKILLER] > 100)
 				healths.overlays.Cut()
 				healths.icon_state = "health_numb"
-			
-			else if(using_alt_hud)//If we're using Lunahud we want the lunahud health face.
-				var/mhealth = (getBruteLoss() + getFireLoss())
-				switch(mhealth)
-					if(100 to INFINITY)		healths.icon_state = "health6"
-					if(80 to 100)			healths.icon_state = "health5"
-					if(60 to 80)			healths.icon_state = "health4"
-					//if(60 to 80)			healths.icon_state = "health3"
-					if(40 to 60)			healths.icon_state = "health2"
-					if(20 to 40)			healths.icon_state = "health1"
-					if(0 to 20)				healths.icon_state = "health0"
 			else
 				// Generate a by-limb health display.
 				healths.icon_state = "blank"
@@ -777,20 +753,6 @@
 				if(250 to 350)					nutrition_icon.icon_state = "nutrition2"
 				if(150 to 250)					nutrition_icon.icon_state = "nutrition3"
 				else							nutrition_icon.icon_state = "nutrition4"
-
-		if(stamina_icon)
-			switch((staminaloss))
-				if(100 to INFINITY)		stamina_icon.icon_state = "stamina10"
-				if(90 to 100)			stamina_icon.icon_state = "stamina9"
-				if(80 to 90)			stamina_icon.icon_state = "stamina8"
-				if(70 to 80)			stamina_icon.icon_state = "stamina7"
-				if(60 to 70)			stamina_icon.icon_state = "stamina6"
-				if(50 to 60)			stamina_icon.icon_state = "stamina5"
-				if(40 to 50)			stamina_icon.icon_state = "stamina4"
-				if(30 to 40)			stamina_icon.icon_state = "stamina3"
-				if(20 to 30)			stamina_icon.icon_state = "stamina2"
-				if(10 to 20)			stamina_icon.icon_state = "stamina1"
-				else					stamina_icon.icon_state = "stamina0"
 
 		if(isSynthetic())
 			var/obj/item/organ/internal/cell/C = internal_organs_by_name[BP_CELL]
@@ -858,17 +820,9 @@
 						bodytemp.icon_state = "temp-1"
 					else
 						bodytemp.icon_state = "temp0"
-	if(resting)
-		rest.icon_state = "rest1"
-	else
-		rest.icon_state = "rest0"
-
 	return 1
 
 /mob/living/carbon/human/handle_random_events()
-	if(in_stasis)
-		return
-
 	// Puke if toxloss is too high
 	var/vomit_score = 0
 	for(var/tag in list(BP_LIVER,BP_KIDNEYS))
@@ -895,6 +849,8 @@
 	var/area/A = get_area(src)
 	if(client && world.time >= client.played + 600)
 		A.play_ambience(src)
+	if(stat == UNCONSCIOUS && world.time - l_move_time < 5 && prob(10))
+		to_chat(src,"<span class='notice'>You feel like you're [pick("moving","flying","floating","falling","hovering")].</span>")
 
 /mob/living/carbon/human/handle_stomach()
 	spawn(0)
@@ -913,7 +869,6 @@
 					if(!(M.status_flags & GODMODE))
 						M.adjustBruteLoss(5)
 					nutrition += 10
-	handle_excrement()
 
 /mob/living/carbon/human/proc/handle_changeling()
 	if(mind && mind.changeling)
@@ -928,62 +883,56 @@
 
 	if(is_asystole())
 		shock_stage = max(shock_stage, 61)
-	if(get_shock() >= max(50, shock_stage))
+	var/traumatic_shock = get_shock()
+	if(traumatic_shock >= max(30, 0.8*shock_stage))
 		shock_stage += 1
 	else
 		shock_stage = min(shock_stage, 160)
-		shock_stage = max(shock_stage-1, 0)
+		var/recovery = 1
+		if(traumatic_shock < 0.5 * shock_stage) //lower shock faster if pain is gone completely
+			recovery++
+		if(traumatic_shock < 0.25 * shock_stage)
+			recovery++
+		shock_stage = max(shock_stage - recovery, 0)
 		return
-
 	if(stat) return 0
 
 	if(shock_stage == 10)
 		// Please be very careful when calling custom_pain() from within code that relies on pain/trauma values. There's the
 		// possibility of a feedback loop from custom_pain() being called with a positive power, incrementing pain on a limb,
-		// which triggers this proc, which calls custom_pain(), etc. Make sure you call it with 0 power in these cases!
-		custom_pain("[pick("It hurts so much", "You really need some painkillers", "Dear god, the pain")]!", 10, nohalloss = 0)
+		// which triggers this proc, which calls custom_pain(), etc. Make sure you call it with nohalloss = TRUE in these cases!
+		custom_pain("[pick("It hurts so much", "You really need some painkillers", "Dear god, the pain")]!", 10, nohalloss = TRUE)
 
 	if(shock_stage >= 30)
-		if(shock_stage == 30)
-			visible_message("<b>[src]</b> is having trouble keeping \his eyes open.")
+		if(shock_stage == 30) visible_message("<b>[src]</b> is having trouble keeping \his eyes open.")
 		if(prob(30))
 			eye_blurry = max(2, eye_blurry)
 			stuttering = max(stuttering, 5)
 
 	if(shock_stage == 40)
-		custom_pain("[pick("The pain is excruciating", "Please, just end the pain", "Your whole body is going numb")]!", 0)
-		src.agony_moan()
-		//emote("moan")
-
+		custom_pain("[pick("The pain is excruciating", "Please, just end the pain", "Your whole body is going numb")]!", 40, nohalloss = TRUE)
 	if (shock_stage >= 60)
-		//if(shock_stage == 60)
-		//	visible_message("<b>[src]</b>'s body becomes limp.")
+		if(shock_stage == 60) visible_message("<b>[src]</b>'s body becomes limp.")
 		if (prob(2))
-			custom_pain("[pick("The pain is excruciating", "Please, just end the pain")]!", shock_stage, nohalloss = 0)
-			adjustStaminaLoss(20)
-		//	flash_weak_pain()
-		//	stuttering = max(stuttering, 5)
+			custom_pain("[pick("The pain is excruciating", "Please, just end the pain", "Your whole body is going numb")]!", shock_stage, nohalloss = TRUE)
+			Weaken(10)
 
 	if(shock_stage >= 80)
 		if (prob(5))
-			custom_pain("[pick("The pain is excruciating", "Please, just end the pain")]!", shock_stage, nohalloss = 0)
-			adjustStaminaLoss(20)
-		//	flash_weak_pain()
-		//	stuttering = max(stuttering, 5)
+			custom_pain("[pick("The pain is excruciating", "Please, just end the pain", "Your whole body is going numb")]!", shock_stage, nohalloss = TRUE)
+			Weaken(20)
 
 	if(shock_stage >= 120)
 		if (prob(2))
-			custom_pain("[pick("You black out", "You feel like you could die any moment now", "You're about to lose consciousness")]!", shock_stage, nohalloss = 0)
+			custom_pain("[pick("You black out", "You feel like you could die any moment now", "You're about to lose consciousness")]!", shock_stage, nohalloss = TRUE)
 			Paralyse(5)
-		//	flash_pain()
-		//	stuttering = max(stuttering, 5)
 
 	if(shock_stage == 150)
-		//visible_message("<b>[src]</b> can no longer stand, collapsing!")
-		adjustStaminaLoss(20)//Weaken(20)
+		visible_message("<b>[src]</b> can no longer stand, collapsing!")
+		Weaken(20)
 
-	//if(shock_stage >= 150)
-	//	Weaken(20)
+	if(shock_stage >= 150)
+		Weaken(20)
 
 /*
 	Called by life(), instead of having the individual hud items update icons each tick and check for status changes
@@ -1197,75 +1146,3 @@
 	..()
 	if(XRAY in mutations)
 		set_sight(sight|SEE_TURFS|SEE_MOBS|SEE_OBJS)
-
-/mob/living/carbon/human/proc/handle_decay()
-	var/decaytime = world.time - timeofdeath
-	var/image/flies = image('icons/effects/effects.dmi', "rotten")//This is a hack, there has got to be a safer way to do this but I don't know it at the moment.
-
-	if(isSynthetic())
-		return
-
-	if(decaytime <= 6000) //10 minutes for decaylevel1 -- stinky
-		return
-
-	if(decaytime > 6000 && decaytime <= 12000)//20 minutes for decaylevel2 -- bloated and very stinky
-		decaylevel = 1
-		overlays -= flies
-		overlays += flies
-
-	if(decaytime > 12000 && decaytime <= 18000)//30 minutes for decaylevel3 -- rotting and gross
-		decaylevel = 2
-
-	if(decaytime > 18000 && decaytime <= 27000)//45 minutes for decaylevel4 -- skeleton
-		decaylevel = 3
-
-	if(decaytime > 27000)
-		decaylevel = 4
-		overlays -= flies
-		flies = null
-		ChangeToSkeleton()
-		return //No puking over skeletons, they don't smell at all!
-
-
-	for(var/mob/living/carbon/human/H in range(decaylevel, src))
-		if(prob(2))
-			if(istype(loc,/obj/item/bodybag))
-				return
-			if(H.wear_mask)
-				return
-			if(H.stat == DEAD)//This shouldn't even need to be a fucking check.
-				return
-			to_chat(H, "<spawn class='warning'>You smell something foul...")
-			H.add_event("disgust", /datum/happiness_event/disgust/verygross)
-			if(prob(75))
-				H.vomit()
-
-//So that people will stop shitting in the fucking hallways all the time. Actually this will probably encourage them.
-/mob/living/carbon/human/proc/handle_smelly_things()
-	if(wear_mask)
-		return
-
-	if(/obj/effect/decal/cleanable/poo in range(5, src))
-		if(prob(2))
-			to_chat(src, "<spawn class='warning'>Something smells like shit...")
-			add_event("disgust", /datum/happiness_event/disgust/verygross)
-			if(prob(50))
-				vomit()
-
-	for(var/obj/item/weapon/reagent_containers/food/snacks/poo/P in range(5, src))
-		if(istype(P.loc, /obj/machinery/disposal) || istype(P.loc, /obj/item/weapon/storage/bag))
-			return
-
-		if(prob(2))
-			to_chat(src, "<spawn class='warning'>Something smells like shit...")
-			add_event("disgust", /datum/happiness_event/disgust/verygross)
-			if(prob(50))
-				vomit()
-
-
-/mob/living/carbon/human/proc/handle_gas_mask_sound()
-	//var/soundcooldown = world.time
-	if(istype(wear_mask, /obj/item/clothing/mask/gas))
-		//if((world.time - soundcooldown) >= 300)
-		var/mask_sound = pick('sound/effects/gasmask1.ogg','sound/effects/gasmask2.ogg','sound/effects/gasmask3.ogg','sound/effects/gasmask4.ogg','sound/effects/gasmask5.ogg','sound/effects/gasmask6.ogg','sound/effects/gasmask7.ogg','sound/effects/gasmask8.ogg','sound/effects/gasmask9.ogg','sound/effects/gasmask10.ogg')
-		playsound(src, mask_sound, 50, 1)

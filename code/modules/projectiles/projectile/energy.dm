@@ -64,7 +64,6 @@
 	fire_sound = 'sound/weapons/Taser.ogg'
 	mob_hit_sound = list('sound/weapons/tase.ogg')
 	nodamage = 1
-	taser_effect = 1
 	agony = 50
 	damage_type = PAIN
 	//Damage will be handled on the MOB side, to prevent window shattering.

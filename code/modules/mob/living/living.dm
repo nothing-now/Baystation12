@@ -828,9 +828,16 @@ default behaviour is:
 	var/pixel_y_diff = rand(-2,2)
 	animate(src, pixel_x = pixel_x + pixel_x_diff, pixel_y = pixel_y + pixel_y_diff, time = 2)
 	animate(pixel_x = initial(pixel_x), pixel_y = initial(pixel_y), time = 2)
+/mob/living/update_icons()
+	if(auras)
+		overlays |= auras
 
 /mob/living/receive_damage(atom/A)
 	..()
+/mob/living/proc/add_aura(var/obj/aura/aura)
+	LAZYDISTINCTADD(auras,aura)
+	update_icons()
+	return 1
 
 /mob/living/proc/getTrail() //silicon and simple_animals don't get blood trails
     return null
@@ -847,3 +854,14 @@ default behaviour is:
 		else
 			in_vision_cones.Remove(C)
 	. = ..()
+
+/mob/living/proc/remove_aura(var/obj/aura/aura)
+	LAZYREMOVE(auras,aura)
+	update_icons()
+	return 1
+
+/mob/living/Destroy()
+	if(auras)
+		for(var/a in auras)
+			remove_aura(a)
+	return ..()
