@@ -1,10 +1,11 @@
 /mob/living/carbon/human/examine(mob/user)
 	if(!isobserver(user))
-		user.visible_message("<small>[user] looks at [src].</small>")
-	
-	if(get_dist(user,src) > 5)//Don't get descriptions of things far away.
-		to_chat(user, "<span class='info'>It's too far away to see clearly.</span>")
-		return
+		user.visible_message("<font size=1>[user.name] looks at [src].</font>")
+
+		if(get_dist(user,src) > 5)//Don't get descriptions of things far away.
+			to_chat(user, "<span class='info'>It's too far away to see clearly.</span>")
+			return
+
 	var/skipgloves = 0
 	var/skipsuitstorage = 0
 	var/skipjumpsuit = 0
@@ -286,6 +287,24 @@
 		msg += "<span class='danger'>[src] [T.has] \a [implant.name] sticking out of [T.his] flesh!</span>\n"
 	if(digitalcamo)
 		msg += "[T.He] [T.is] repulsively uncanny!\n"
+
+
+	var/obj/item/organ/external/head/O = locate(/obj/item/organ/external/head) in organs
+	if(O && O.get_teeth() < O.max_teeth)
+		msg += "<span class='warning'><B>[O.get_teeth() <= 0 ? "All" : "[O.max_teeth - O.get_teeth()]"] of [T.his] teeth are missing!</B></span>\n"
+
+	if(!skipface)
+		if(happiness <= MOOD_LEVEL_SAD2)
+			msg += "<span class='warning'>[T.He] looks sad.</span>\n"
+
+	if(decaylevel == 1)
+		msg += "[T.He] [T.is] starting to smell.\n"
+	if(decaylevel == 2)
+		msg += "[T.He] [T.is] bloated and smells disgusting.\n"
+	if(decaylevel == 3)
+		msg += "[T.He] [T.is] rotting and blackened, the skin sloughing off. The smell is indescribably foul.\n"
+	if(decaylevel == 4)
+		msg += "[T.He] [T.is] mostly dessicated now, with only bones remaining of what used to be a person.\n"
 
 	if(hasHUD(user,"security"))
 		var/perpname = "wot"
