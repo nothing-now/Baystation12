@@ -13,7 +13,6 @@
 	unload_sound 	= 'sound/weapons/guns/interact/rev_magout.ogg'
 	reload_sound 	= 'sound/weapons/guns/interact/rev_magin.ogg'
 	bulletinsert_sound 	= 'sound/weapons/guns/interact/rev_magin.ogg'
-	magazine_based = 0
 
 /obj/item/weapon/gun/projectile/revolver/verb/spin_cylinder()
 	set name = "Spin cylinder"

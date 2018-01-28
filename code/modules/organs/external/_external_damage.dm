@@ -97,8 +97,8 @@
 
 	if(status & ORGAN_BROKEN && brute)
 		jostle_bone(brute)
-		if(can_feel_pain() && prob(40))
-			owner.emote("scream")	//getting hit on broken hand hurts
+		//if(can_feel_pain() && prob(40))
+		//	owner.emote("scream")	//getting hit on broken hand hurts
 
 	if(brute_dam > min_broken_damage && prob(brute_dam + brute * (1+blunt)) ) //blunt damage is gud at fracturing
 		fracture()
@@ -239,7 +239,7 @@
 	var/last_pain = pain
 	pain = max(0,min(max_damage,pain+amount))
 	if(owner && ((amount > 15 && prob(20)) || (amount > 30 && prob(60))))
-		owner.emote("scream")
+		owner.agony_scream()
 	return pain-last_pain
 
 /obj/item/organ/external/proc/stun_act(var/stun_amount, var/agony_amount)

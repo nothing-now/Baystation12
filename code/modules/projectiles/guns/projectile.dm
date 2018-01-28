@@ -42,7 +42,7 @@
 	//var/magazine_states = 0
 	//var/list/icon_keys = list()		//keys
 	//var/list/ammo_states = list()	//values
-	var/magazine_based = 1
+	var/casingsound = 'sound/weapons/guns/misc/casingfall1.ogg'
 
 /obj/item/weapon/gun/projectile/New()
 	..()
@@ -91,7 +91,7 @@
 	switch(handle_casings)
 		if(EJECT_CASINGS) //eject casing onto ground.
 			chambered.loc = get_turf(src)
-			//playsound(src, casing_sound, 50, 1) //Supposidly, this will fix a crash.
+			playsound(get_turf(src), casingsound, 100, 1)
 		if(CYCLE_CASINGS) //cycle the casing back to the end.
 			if(ammo_magazine)
 				ammo_magazine.stored_ammo += chambered
@@ -231,7 +231,6 @@
 		to_chat(user, "<span class='warning'>It looks jammed.</span>")
 	if(ammo_magazine)
 		to_chat(user, "It has \a [ammo_magazine] loaded.")
-	if(!magazine_based)
 		to_chat(user, "[inexactAmmo()]")
 	
 	return

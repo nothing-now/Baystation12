@@ -2,7 +2,6 @@
 	bulletinsert_sound 	= 'sound/weapons/guns/interact/shotgun_instert.ogg'
 	fire_sound = 'sound/weapons/guns/fire/shotgun.ogg'
 	parry_sounds = list('sound/weapons/blunt_parry1.ogg', 'sound/weapons/blunt_parry2.ogg', 'sound/weapons/blunt_parry3.ogg')
-	magazine_based = 0
 
 /obj/item/weapon/gun/projectile/shotgun/pump
 	name = "shotgun"
@@ -22,7 +21,7 @@
 	one_hand_penalty = 2
 	var/recentpump = 0 // to prevent spammage
 	var/pumpsound = 'sound/weapons/shotgunpump.ogg' //Support for other kinds of pump weapons.
-	var/casingsound = 'sound/weapons/guns/misc/shotgun_fall.ogg' //Same here.
+	casingsound = 'sound/weapons/guns/misc/shotgun_fall.ogg' //Same here.
 	wielded_item_state = "wshotgun"
 
 
@@ -88,7 +87,7 @@
 	origin_tech = list(TECH_COMBAT = 3, TECH_MATERIAL = 1)
 	ammo_type = /obj/item/ammo_casing/shotgun/beanbag
 	one_hand_penalty = 2
-	wielded_item_state = "rifle-wielded"
+	wielded_item_state = "dshotgun1"
 
 	burst_delay = 0
 	firemodes = list(
