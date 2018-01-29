@@ -313,6 +313,7 @@
 
 	//actually throw it!
 	src.visible_message("<span class='warning'>[src] has thrown [item].</span>", range = min(itemsize*2,world.view))
+	playsound(src, 'sound/effects/throw.ogg', 50, 1)
 
 	if(!src.lastarea)
 		src.lastarea = get_area(src.loc)
@@ -320,8 +321,6 @@
 		src.inertia_dir = get_dir(target, src)
 		step(src, inertia_dir)
 
-
-		playsound(src, 'sound/effects/throw.ogg', 50, 1)
 /*
 	if(istype(src.loc, /turf/space) || (src.flags & NOGRAV)) //they're in space, move em one space in the opposite direction
 		src.inertia_dir = get_dir(target, src)
