@@ -100,8 +100,11 @@ proc/strToDamageModifier(var/strength)
 		if(12 to 15)
 			return 1.5
 
-		if(16 to INFINITY)
+		if(16 to 18)
 			return  1.75
+
+		if(18 to INFINITY)
+			return 2
 
 proc/strToSpeedModifier(var/strength, var/w_class)//Looks messy. Is messy. Is also only used once. But I don't give a fuuuuuuuuck.
 	switch(strength)
@@ -141,6 +144,13 @@ proc/strToSpeedModifier(var/strength, var/w_class)//Looks messy. Is messy. Is al
 	int += num
 
 
+/mob/proc/temporary_stat_adjust(var/stat, var/modifier, var/time)
+	if(stat && modifier && time)//In case you somehow call this without using all three vars.
+		stat += modifier
+		spawn(time)
+			stat -= modifier
+
+
 
 //Skill helpers.
 /mob/proc/skillnumtodesc(var/skill)
@@ -150,7 +160,7 @@ proc/strToSpeedModifier(var/strength, var/w_class)//Looks messy. Is messy. Is al
 		if(25 to 45)
 			return "unskilled"
 		if(45 to 60)
-			return pick("alright", "ok", "not bad")
+			return "alright"
 		if(60 to 80)
 			return "skilled"
 		if(80 to INFINITY)
