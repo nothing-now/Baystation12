@@ -166,10 +166,10 @@
 			icon_state = "blue"
 		/*else if(atmosalm && !fire && !eject && !party)
 			icon_state = "bluenew"*/
-		else if(!fire && eject && !party)
-			icon_state = "red"
-		else if(party && !fire && !eject)
-			icon_state = "party"
+		//else if(!fire && eject && !party)
+		//	icon_state = "red"
+		//else if(party && !fire && !eject)
+		//	icon_state = "party"
 		else
 			icon_state = "blue-red"
 	else
