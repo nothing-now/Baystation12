@@ -86,6 +86,8 @@ var/list/name_to_material
 	var/icon_base = "metal"                              // Wall and table base icon tag. See header.
 	var/door_icon_base = "metal"                         // Door base icon tag. See header.
 	var/icon_reinf = "reinf_metal"                       // Overlay used
+	var/table_icon_base = "metal"
+	var/table_reinf = "reinf_metal"
 	var/list/stack_origin_tech = list(TECH_MATERIAL = 1) // Research level for stacks.
 
 	// Attributes
@@ -243,11 +245,12 @@ var/list/name_to_material
 	stack_type = /obj/item/stack/material/uranium
 	radioactivity = 12
 	icon_base = "stone"
+	door_icon_base = "stone"
+	table_icon_base = "stone"
 	icon_reinf = "reinf_stone"
 	icon_colour = "#007a00"
 	weight = 22
 	stack_origin_tech = list(TECH_MATERIAL = 5)
-	door_icon_base = "stone"
 
 /material/diamond
 	name = "diamond"
@@ -294,6 +297,7 @@ var/list/name_to_material
 	stack_type = /obj/item/stack/material/phoron
 	ignition_point = PHORON_MINIMUM_BURN_TEMPERATURE
 	icon_base = "stone"
+	table_icon_base = "stone"
 	icon_colour = "#e37108"
 	shard_type = SHARD_SHARD
 	hardness = 30
@@ -332,6 +336,7 @@ var/list/name_to_material
 	name = "sandstone"
 	stack_type = /obj/item/stack/material/sandstone
 	icon_base = "stone"
+	table_icon_base = "stone"
 	icon_reinf = "reinf_stone"
 	icon_colour = "#d9c179"
 	shard_type = SHARD_STONE_PIECE
@@ -445,6 +450,7 @@ var/list/name_to_material
 	brute_armor = 1
 	burn_armor = 2
 	door_icon_base = "stone"
+	table_icon_base = "solid"
 	destruction_desc = "shatters"
 	window_options = list("One Direction" = 1, "Full Window" = 4)
 	created_window = /obj/structure/window/basic
@@ -676,6 +682,7 @@ var/list/name_to_material
 	icon_colour = "#824b28"
 	integrity = 50
 	icon_base = "solid"
+	table_icon_base = "solid"
 	explosion_resistance = 2
 	shard_type = SHARD_SPLINTER
 	shard_can_repair = 0 // you can't weld splinters back into planks
