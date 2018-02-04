@@ -209,7 +209,7 @@ proc/ageAndGender2Desc(age, gender)//Used for the radio
 		if (progress)
 			progbar.update(world.time - starttime)
 
-		if(!user || user.incapacitated(incapacitation_flags) || (user.loc != original_loc && !can_move) || (same_direction && user.dir != original_dir))
+		if(!user || user.incapacitated(incapacitation_flags) || user.loc != original_loc || (same_direction && user.dir != original_dir))
 			. = 0
 			break
 
