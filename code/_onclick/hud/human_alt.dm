@@ -10,9 +10,9 @@
 		hud_data = target.species.hud
 
 	if(hud_data.icon)
-		ui_style = 'icons/mob/screen/dark.dmi'//hud_data.icon
+		ui_style = 'icons/mob/screen/orange_luna.dmi'//hud_data.icon
 	else
-		ui_style = 'icons/mob/screen/dark.dmi'
+		ui_style = 'icons/mob/screen/orange_luna.dmi'
 
 	src.adding = list()
 	src.other = list()
@@ -26,6 +26,7 @@
 	using = new /obj/screen() //Right hud bar
 	using.dir = SOUTH
 	using.icon = ui_style
+	using.icon_state = "bg" 
 	using.screen_loc = "EAST+1,SOUTH to EAST+1,NORTH"
 	using.layer = UNDER_HUD_LAYER
 	adding += using
@@ -33,6 +34,7 @@
 	using = new /obj/screen() //Lower hud bar
 	using.dir = EAST
 	using.icon = ui_style
+	using.icon_state = "bg"
 	using.screen_loc = "WEST,SOUTH-1 to EAST,SOUTH-1"
 	using.layer = UNDER_HUD_LAYER
 	adding += using
@@ -40,6 +42,7 @@
 	using = new /obj/screen() //Corner Button
 	using.dir = NORTHWEST
 	using.icon = ui_style
+	using.icon_state = "bg"
 	using.screen_loc = "EAST+1,SOUTH-1"
 	using.layer = UNDER_HUD_LAYER
 	adding += using
@@ -287,14 +290,12 @@
 	mymob.rest.name = "rest"
 	mymob.rest.icon = ui_style
 	mymob.rest.icon_state = "rest[mymob.resting]"
-	mymob.rest.screen_loc = ui_resist//ui_rest
+	mymob.rest.screen_loc =  ui_resist
 	hud_elements |= mymob.rest
 	if (mymob.resting)
 		mymob.rest.icon_state = "rest1"
 	else
 		mymob.rest.icon_state = "rest0"
-
-
 
 	mymob.kick_icon = new /obj/screen()
 	mymob.kick_icon.icon = ui_style

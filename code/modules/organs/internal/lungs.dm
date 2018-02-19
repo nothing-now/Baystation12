@@ -247,6 +247,7 @@
 	if(prob(15) && !owner.nervous_system_failure())
 		if(!owner.is_asystole())
 			if(active_breathing)
+				owner.gasp_sound()
 				owner.emote("gasp")
 		else
 			owner.emote(pick("shiver","twitch"))

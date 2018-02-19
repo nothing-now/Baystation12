@@ -310,9 +310,9 @@
 	intent = I_DISARM
 	if(icon_x <= world.icon_size/2)
 		if(icon_y <= world.icon_size/2)
-			intent = I_HURT
+			intent = I_HELP // I_HURT
 		else
-			intent = I_HELP
+			intent = I_HURT // I_HELP
 	else if(icon_y <= world.icon_size/2)
 		intent = I_GRAB
 	update_icon()

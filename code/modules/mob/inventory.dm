@@ -169,16 +169,16 @@ var/list/slot_equipment_priority = list( \
 
 //Drops the item in our active hand. TODO: rename this to drop_active_hand or something
 /mob/proc/drop_item(var/atom/Target)
+	make_item_drop_sound()
 	if(hand)
-		make_item_drop_sound()
 		return drop_l_hand(Target)
 	else
-		make_item_drop_sound()
+		//make_item_drop_sound()
 		return drop_r_hand(Target)
 
 /mob/proc/make_item_drop_sound()
 	var/obj/item/I = get_active_hand()
-	spawn (1)
+	spawn(1)
 		if(!I)
 			return
 		if(I.drop_sound)
